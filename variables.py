@@ -5,12 +5,10 @@ from gurobipy import *
 def generate_variables(m: Model, dataframes):
     variables = {}
     # create variables structure
+    taches_df = dataframes["taches_df"]
+    machines_df = dataframes["machines_df"]
 
     def add_arrival_tasks(sillon):
-        machines_df = dataframes["machines_df"]
-
-        taches_df = dataframes["taches_df"]
-
         # humain
         for idx in range(len(taches_df)):
             if taches_df.iloc[idx]["Type de train"] == "ARR":
@@ -23,9 +21,6 @@ def generate_variables(m: Model, dataframes):
                     vtype=GRB.INTEGER, name=f'{machines_df.iloc[idx]["Machine"]}-{sillon["n°TRAIN"]}')
 
     def add_departure_tasks(sillon):
-        machines_df = dataframes["machines_df"]
-
-        taches_df = dataframes["taches_df"]
         for idx in range(len(taches_df)):
             if taches_df.iloc[idx]["Type de train"] == "DEP":
                 variables[taches_df.iloc[idx]["Type de tache humaine"]][sillon["n°TRAIN"]] = m.addVar(
@@ -35,9 +30,6 @@ def generate_variables(m: Model, dataframes):
             if machines_df.iloc[idx]["Machine"] in ["FOR", "DEG"]:
                 variables[machines_df.iloc[idx]["Machine"]][sillon["n°TRAIN"]] = m.addVar(
                     vtype=GRB.INTEGER, name=f'{machines_df.iloc[idx]["Machine"]}-{sillon["n°TRAIN"]}')
-
-    taches_df = dataframes["taches_df"]
-    machines_df = dataframes["machines_df"]
 
     for idx in range(len(taches_df)):
         variables[taches_df.iloc[idx]["Type de tache humaine"]] = {}
