@@ -20,7 +20,7 @@ def generate_contraintes(m, dataframes, dico):
         Adds a constraints to model m equal to representing |t2-t1|>=d.
         '''
         v = m.addVar(vtype = GRB.BINARY, name = f'helper var')
-        m.addConstr((v==1)>>(t2-t1<=0))
+        m.addConstr((v==1)>>(t2-t1<=0)) # pas necessaire
         m.addConstr(t2-t1>=d-M*v)
         m.addConstr(t2-t1<=-d+M*(1-v))
         
