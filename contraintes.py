@@ -1,10 +1,6 @@
 from gurobipy import *
 import data
 
-
-
-
-
 def generate_contraintes(m, dataframes, dico):
     taches_df = dataframes["taches_df"]
     machines_df = dataframes["machines_df"]
@@ -87,6 +83,23 @@ def generate_contraintes(m, dataframes, dico):
     #             debut = dico[machine][sillon]
     #             fin = debut + machines_df["Duree "].iloc[machines_dico[machine]]
     #             m.addConstr((debut<=indispTuple[0] and fin<=indispTuple[0]) or (debut>=indispTuple[1] and fin>=indispTuple[1]))
+
+    ##### Antécedents #####
+    ##### Wagons tous présent avant assemblage du sillon #####
+    ##### taches humaines (chaines et debut synchro avec les taches machines) #####
+    ##### Heure de depart du train respectée #####
+    ##### heure d'arrivée du train respectée  #####
+    ##### Indisponibilités ##### 
+    ##### Respect du nombre de voies de chantier #####
+
+
+
+    
+
+
+
+
+
 
     
 

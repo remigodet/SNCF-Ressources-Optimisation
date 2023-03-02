@@ -1,12 +1,12 @@
 import pandas as pd
 from pandas import read_excel
-
+NAME = "instance_WPY_realiste.xls"
 data = {}
-data["taches_df"] = pd.read_excel("./Data SNCF/mini_instance.xls", sheet_name="Taches humaines")
-data["chantiers_df"] = pd.read_excel("./Data SNCF/mini_instance.xls", sheet_name="Chantiers")
-data["machines_df"] = pd.read_excel("./Data SNCF/mini_instance.xls", sheet_name="Machines")
-data["sillons_df"] = pd.read_excel("./Data SNCF/mini_instance.xls", sheet_name="Sillons")
-data["correspondances_df"] = pd.read_excel("./Data SNCF/mini_instance.xls", sheet_name="Correspondances")
+data["taches_df"] = pd.read_excel(f"./Data SNCF/{NAME}", sheet_name="Taches humaines")
+data["chantiers_df"] = pd.read_excel(f"./Data SNCF/{NAME}", sheet_name="Chantiers")
+data["machines_df"] = pd.read_excel(f"./Data SNCF/{NAME}", sheet_name="Machines")
+data["sillons_df"] = pd.read_excel(f"./Data SNCF/{NAME}", sheet_name="Sillons")
+data["correspondances_df"] = pd.read_excel(f"./Data SNCF/{NAME}", sheet_name="Correspondances")
 
 def get_all_pandas():
     return data
