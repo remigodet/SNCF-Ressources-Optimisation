@@ -13,15 +13,15 @@ def generate_contraintes(m, dataframes, dico):
                  "FOR" : 1,
                  "DEG" : 2}
     ##### Anti-Parallélisme des tâches machines #####
-
+    anti_parallel_constrs = []
     for machine in machines_dico.keys():
         for sillon_i in dico[machine].keys():
             for sillon_j in dico[machine].keys():
                 if sillon_i!=sillon_j:
-                    print(sillon_i, sillon_j)
-                    m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])
-                                and (dico[machine][sillon_i] - dico[machine][sillon_j] <= -machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0]))
-
+                    # print(sillon_i, sillon_j)
+                    anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
+                    anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] <= -machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
+    print("Number of anti-parallel constraints : ", len(anti_parallel_constrs))
 
     ##### Respect des créneaux #####
 
