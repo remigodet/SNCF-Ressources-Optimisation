@@ -1,0 +1,4 @@
+Machine;Type de tache;Duree ;Indisponibilites
+DEB;Débranchement;20;0
+FOR;Formation;10;"(6,13:00-13:00);(7, 13:00-13:000)"
+DEG;Dégarage;20;0
