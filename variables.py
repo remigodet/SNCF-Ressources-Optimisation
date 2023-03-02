@@ -12,24 +12,24 @@ def generate_variables(m: Model, dataframes):
         # humain
         for idx in range(len(taches_df)):
             if taches_df.iloc[idx]["Type de train"] == "ARR":
-                variables[taches_df.iloc[idx]["Type de tache humaine"]][sillon["n°TRAIN"]+str(sillon["JDEP"])] = m.addVar(
-                    vtype=GRB.INTEGER, name=str(idx) + "_"+sillon["n°TRAIN"]+str(sillon["JDEP"]))
+                variables[taches_df.iloc[idx]["Type de tache humaine"]][str(sillon["n°TRAIN"])+str(sillon["JDEP"])] = m.addVar(
+                    vtype=GRB.INTEGER, name=str(idx) + "_"+str(sillon["n°TRAIN"])+str(sillon["JDEP"]))
         # machine
         for idx in range(len(machines_df)):
             if machines_df.iloc[idx]["Machine"] in ["DEB"]:
-                variables[machines_df.iloc[idx]["Machine"]][sillon["n°TRAIN"]+str(sillon["JDEP"])] = m.addVar(
-                    vtype=GRB.INTEGER, name=f'{machines_df.iloc[idx]["Machine"]}-{sillon["n°TRAIN"]+str(sillon["JDEP"])}')
+                variables[machines_df.iloc[idx]["Machine"]][str(sillon["n°TRAIN"])+str(sillon["JDEP"])] = m.addVar(
+                    vtype=GRB.INTEGER, name=f'{machines_df.iloc[idx]["Machine"]}-{str(sillon["n°TRAIN"])+str(sillon["JDEP"])}')
 
     def add_departure_tasks(sillon):
         for idx in range(len(taches_df)):
             if taches_df.iloc[idx]["Type de train"] == "DEP":
-                variables[taches_df.iloc[idx]["Type de tache humaine"]][sillon["n°TRAIN"]+str(sillon["JDEP"])] = m.addVar(
-                    vtype=GRB.INTEGER, name=str(idx) + "_"+sillon["n°TRAIN"]+str(sillon["JDEP"]))
+                variables[taches_df.iloc[idx]["Type de tache humaine"]][str(sillon["n°TRAIN"])+str(sillon["JDEP"])] = m.addVar(
+                    vtype=GRB.INTEGER, name=str(idx) + "_"+str(sillon["n°TRAIN"])+str(sillon["JDEP"]))
         # machine
         for idx in range(len(machines_df)):
             if machines_df.iloc[idx]["Machine"] in ["FOR", "DEG"]:
-                variables[machines_df.iloc[idx]["Machine"]][sillon["n°TRAIN"]+str(sillon["JDEP"])] = m.addVar(
-                    vtype=GRB.INTEGER, name=f'{machines_df.iloc[idx]["Machine"]}-{sillon["n°TRAIN"]+str(sillon["JDEP"])}')
+                variables[machines_df.iloc[idx]["Machine"]][str(sillon["n°TRAIN"])+str(sillon["JDEP"])] = m.addVar(
+                    vtype=GRB.INTEGER, name=f'{machines_df.iloc[idx]["Machine"]}-{str(sillon["n°TRAIN"])+str(sillon["JDEP"])}')
 
     for idx in range(len(taches_df)):
         variables[taches_df.iloc[idx]["Type de tache humaine"]] = {}
@@ -44,7 +44,7 @@ def generate_variables(m: Model, dataframes):
         if sillon["LDEP"] == "NC":
             # add all taches arrival
             add_arrival_tasks(sillon)
-        elif sillon["LDEP"] == "WPY":
+        elif sillon["LDEP"] == "WPY_DEP":
             # add all taches departure
             add_departure_tasks(sillon)
         else:
