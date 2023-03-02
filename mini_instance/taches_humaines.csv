@@ -1,9 +1,0 @@
-Type de train;Type de tache humaine;Lien sillon;Durée;Site;Ordre
-ARR;arrivée Reception;ARR+;15;WPY_REC;1
-ARR;préparation tri;ARR+;45;WPY_REC;2
-ARR;débranchement;DEB=;20;WPY_REC;3
-DEP;appui voie + mise en place câle;FOR=;10;WPY_FOR;1
-DEP;attelage véhicules;DEP-;149;WPY_FOR;2
-DEP;dégarage / bouger de rame;DEG=;15;WPY_FOR;3
-DEP;essai de frein départ;DEP-;20;WPY_DEP;4
-;;;;;
