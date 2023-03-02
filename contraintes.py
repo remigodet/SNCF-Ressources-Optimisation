@@ -12,6 +12,18 @@ def generate_contraintes(m, dataframes, dico):
     machines_dico = {"DEB" : 0,
                  "FOR" : 1,
                  "DEG" : 2}
+
+    ##### helper funcs
+    M = 1000000
+    def add_constr_abs_sup(m,t2, t1, d):
+        '''
+        Adds a constraints to model m equal to representing |t2-t1|>=d.
+        '''
+        v = m.addVar(vtype = GRB.BINARY, name = f'helper var')
+        m.addConstr((v==1)>>(t2-t1<=0))
+        m.addConstr(t2-t1>=d-M*v)
+        m.addConstr(t2-t1<=-d+M*(1-v))
+        
     ##### Anti-Parallélisme des tâches machines #####
     anti_parallel_constrs = []
     for machine in machines_dico.keys(): #3
@@ -19,7 +31,9 @@ def generate_contraintes(m, dataframes, dico):
             for sillon_j in dico[machine].keys():
                 if sillon_i!=sillon_j:
                     # print(sillon_i, sillon_j)
-                    anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
+                    add_constr_abs_sup(m, dico[machine][sillon_i], dico[machine][sillon_j], machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])
+                    # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] <= dico[machine][sillon_j]) >>((dico[machine][sillon_j] - dico[machine][sillon_i]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
+                    # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] >= dico[machine][sillon_j]) >>((dico[machine][sillon_i] - dico[machine][sillon_j]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
                     # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] <= -machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
     
     print("Number of anti-parallel constraints : ", len(anti_parallel_constrs))
