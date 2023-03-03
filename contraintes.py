@@ -46,8 +46,8 @@ def generate_contraintes(m, dataframes, var_dict):
     #     for sillon in dico[machine].keys():
     #         m.addConstr(dico[machine][sillon] % machines_df["Duree "].iloc[machines_dico[machine]] == 0)
 
-##### Indisponibilités #####
 
+##### Indisponibilités #####
 
 indisp_dico = {}
 for machine in list(machines_df["Machine"]):
@@ -105,44 +105,36 @@ for machine in list(machines_df["Machine"]):
                 if ordre > 1:
                     tache_precedante = taches_df[taches_df["Ordre"] == ordre -
                                                  1][taches_df["Type de train"] == type_train]["Type de tache humaine"].iloc[0]
-                    temp.append(m.addConstr(var_dict[tache][sillon] >= var_dict[tache_precedante][sillon] +
+                    temp.append(m.addConstr(var_dict[tache][sillon] == var_dict[tache_precedante][sillon] +
                                 taches_df[taches_df["Type de tache humaine"] == tache_precedante]["Durée"].iloc[0]))  # == car on les enchaîne sinon >=
-            # ## Débranchement ##
-            # if tache == "Débranchement":
-            #     m.addConstr(taches_df[tache][sillon] >= dataframes["préparation tri"][sillon] +
-            #                 taches_df[taches_df["Type de tache humaine"] == "préparation tri"]["Durée"].iloc[0])  # on ajoute les contraintes pour les taches machines a la main
-            # ## Dégarage ##
-            # if tache == "Dégarage":
-            #     m.addConstr(dataframes[tache][sillon] >= dataframes["préparation tri"][sillon] +
-            #                 taches_df[taches_df["Type de tache humaine"] == "préparation tri"]["Durée"].iloc[0])
     # print(len(temp))
     ##### Wagons tous présent avant assemblage du sillon #####
-    ##### taches humaines (chaines et debut synchro avec les taches machines) #####
+
     ##### taches humaines (chaines et debut synchro avec les taches machines) #####
 
-    for tache in var_dict.keys():
-        for sillon in var_dict[tache].keys():
-            ## Débranchement ##
-            if tache == "Débranchement":
-                tache_collee = taches_df[taches_df["Lien machine"]
-                                         == "DEB="]["Type de tache humaine"].iloc[0]
-                # on colle la tache machine a la tache humaine en parallele
-                m.addConstr(var_dict[tache][sillon] ==
-                            var_dict[tache_collee][sillon])
-                ## Dégarage ##
-            elif tache == "Dégarage":
-                tache_collee = taches_df[taches_df["Lien machine"]
-                                         == "DEG="]["Type de tache humaine"].iloc[0]
-                # on colle la tache machine a la tache humaine en parallele
-                m.addConstr(var_dict[tache][sillon] ==
-                            var_dict[tache_collee][sillon])
-                ## Formation ##
-            elif tache == "Formation":
-                tache_collee = taches_df[taches_df["Lien machine"]
-                                         == "FOR="]["Type de tache humaine"].iloc[0]
-                # on colle la tache machine a la tache humaine en parallele
-                m.addConstr(var_dict[tache][sillon] ==
-                            var_dict[tache_collee][sillon])
+for tache in var_dict.keys():
+    for sillon in var_dict[tache].keys():
+        ## Débranchement ##
+        if tache == "Débranchement":
+            tache_collee = taches_df[taches_df["Lien machine"]
+                                     == "DEB="]["Type de tache humaine"].iloc[0]
+            # on colle la tache machine a la tache humaine en parallele
+            m.addConstr(var_dict[tache][sillon] ==
+                        var_dict[tache_collee][sillon])
+            ## Dégarage ##
+        elif tache == "Dégarage":
+            tache_collee = taches_df[taches_df["Lien machine"]
+                                     == "DEG="]["Type de tache humaine"].iloc[0]
+            # on colle la tache machine a la tache humaine en parallele
+            m.addConstr(var_dict[tache][sillon] ==
+                        var_dict[tache_collee][sillon])
+            ## Formation ##
+        elif tache == "Formation":
+            tache_collee = taches_df[taches_df["Lien machine"]
+                                     == "FOR="]["Type de tache humaine"].iloc[0]
+            # on colle la tache machine a la tache humaine en parallele
+            m.addConstr(var_dict[tache][sillon] ==
+                        var_dict[tache_collee][sillon])
 
     ##### Heure de depart du train respectée #####
     ##### heure d'arrivée du train respectée  #####
