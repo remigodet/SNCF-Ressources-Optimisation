@@ -3,7 +3,7 @@ import data
 from tqdm import tqdm
 
 
-def generate_contraintes(m, dataframes, dico):
+def generate_contraintes(m, dataframes, var_dict):
     taches_df = dataframes["taches_df"]
     machines_df = dataframes["machines_df"]
     chantiers_df = dataframes["chantiers_df"]
@@ -32,7 +32,8 @@ def generate_contraintes(m, dataframes, dico):
     #             if sillon_i != sillon_j:
     #                 # print(sillon_i, sillon_j)
     #                 add_constr_abs_sup(m, dico[machine][sillon_i], dico[machine][sillon_j],
-    #                                   machines_df[machines_df["Machine"] == machine]["Duree "].iloc[0])
+
+                      #    machines_df[machines_df["Machine"] == machine]["Duree "].iloc[0])
     #                 # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] <= dico[machine][sillon_j]) >>((dico[machine][sillon_j] - dico[machine][sillon_i]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
     #                 # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] >= dico[machine][sillon_j]) >>((dico[machine][sillon_i] - dico[machine][sillon_j]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
     #                 # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] <= -machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
@@ -90,29 +91,40 @@ def generate_contraintes(m, dataframes, dico):
     #             m.addConstr((debut<=indispTuple[0] and fin<=indispTuple[0]) or (debut>=indispTuple[1] and fin>=indispTuple[1]))
 
     ##### Antécedents #####
-
-    '''for tache in dataframes.keys():
-        for sillon in dataframes[tache].keys():
+    temp = []
+    n = 0
+    mm = 0
+    for key in var_dict.keys():
+        print(key)
+        print(len(var_dict[key]))
+    print("sillons totaux ?:", len(var_dict["arrivée Reception"]) + len(var_dict["essai de frein départ"]))
+    for tache in var_dict.keys():
+        for sillon in var_dict[tache].keys():
             # on ne teste que les taches humaines
             if tache in list(taches_df["Type de tache humaine"]):
+                n += 1
                 ordre = taches_df[taches_df["Type de tache humaine"]
                                 == tache]["Ordre"].iloc[0]  # on stocke l'ordre de la tache
                 type_train = taches_df[taches_df["Type de tache humaine"]
                                     == tache]["Type de train"].iloc[0]  # on stocke le type de train pour faire matcher plus tard avec celui de la tache precedante
                 if ordre > 1:
+                    mm +=1
                     tache_precedante = taches_df[taches_df["Ordre"] == ordre -
                                                 1][taches_df["Type de train"] == type_train]["Type de tache humaine"].iloc[0]
-                    m.addConstr(dataframes[tache][sillon] == dataframes[tache_precedante][sillon] +
-                                taches_df[taches_df["Type de tache humaine"] == tache_precedante]["Durée"].iloc[0])  # == car on les enchaîne sinon >=
-            ## Débranchement ##
-            if tache == "Débranchement":
-                m.addConstr(taches_df[tache][sillon] >= dataframes["préparation tri"][sillon] +
-                            taches_df[taches_df["Type de tache humaine"] == "préparation tri"]["Durée"].iloc[0])  # on ajoute les contraintes pour les taches machines a la main
-            ## Dégarage ##
-            if tache == "Dégarage":
-                m.addConstr(dataframes[tache][sillon] >= dataframes["préparation tri"][sillon] +
-                            taches_df[taches_df["Type de tache humaine"] == "préparation tri"]["Durée"].iloc[0])'''
-
+                    temp.append(m.addConstr(var_dict[tache][sillon] >= var_dict[tache_precedante][sillon] +
+                                taches_df[taches_df["Type de tache humaine"] == tache_precedante]["Durée"].iloc[0])) # == car on les enchaîne sinon >=
+            # ## Débranchement ##
+            # if tache == "Débranchement":
+            #     m.addConstr(taches_df[tache][sillon] >= dataframes["préparation tri"][sillon] +
+            #                 taches_df[taches_df["Type de tache humaine"] == "préparation tri"]["Durée"].iloc[0])  # on ajoute les contraintes pour les taches machines a la main
+            # ## Dégarage ##
+            # if tache == "Dégarage":
+            #     m.addConstr(dataframes[tache][sillon] >= dataframes["préparation tri"][sillon] +
+            #                 taches_df[taches_df["Type de tache humaine"] == "préparation tri"]["Durée"].iloc[0])
+    print(n)
+    print(mm)
+    print(len(temp))
+    print(len(temp)/217)
     ##### Wagons tous présent avant assemblage du sillon #####
     ##### taches humaines (chaines et debut synchro avec les taches machines) #####
     ##### Heure de depart du train respectée #####
