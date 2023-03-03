@@ -32,7 +32,7 @@ def generate_contraintes(m, dataframes, dico):
     #             if sillon_i != sillon_j:
     #                 # print(sillon_i, sillon_j)
     #                 add_constr_abs_sup(m, dico[machine][sillon_i], dico[machine][sillon_j],
-                                       machines_df[machines_df["Machine"] == machine]["Duree "].iloc[0])
+    #                                   machines_df[machines_df["Machine"] == machine]["Duree "].iloc[0])
     #                 # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] <= dico[machine][sillon_j]) >>((dico[machine][sillon_j] - dico[machine][sillon_i]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
     #                 # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] >= dico[machine][sillon_j]) >>((dico[machine][sillon_i] - dico[machine][sillon_j]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
     #                 # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] <= -machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
@@ -119,28 +119,31 @@ def generate_contraintes(m, dataframes, dico):
     ##### heure d'arrivée du train respectée  #####
     ##### Indisponibilités #####
     ##### Respect du nombre de voies de chantier #####
-    chantier_cycles={}
+    chantier_cycles = {}
     for chantier in set(taches_df["Chantier"].values):
-        chantier_cycles[chantier, "start"]=taches_df[taches_df["Chantier"] == chantier][taches_df.Ordre ==
-            taches_df[taches_df["Chantier"] == chantier].Ordre.max()]["Type de tache humaine"].iloc[0]
-        chantier_cycles[chantier, "end"]=taches_df[taches_df["Chantier"] == chantier][taches_df.Ordre ==
-            taches_df[taches_df["Chantier"] == chantier].Ordre.min()]["Type de tache humaine"].iloc[0]
+        chantier_cycles[chantier, "start"] = taches_df[taches_df["Chantier"] == chantier][taches_df.Ordre ==
+                                                                                          taches_df[taches_df["Chantier"] == chantier].Ordre.max()]["Type de tache humaine"].iloc[0]
+        chantier_cycles[chantier, "end"] = taches_df[taches_df["Chantier"] == chantier][taches_df.Ordre ==
+                                                                                        taches_df[taches_df["Chantier"] == chantier].Ordre.min()]["Type de tache humaine"].iloc[0]
+
     def get_all_tasks_by_name(name):
         return dico[name].values()
+
     def add_occupation_constr(chantier, tache_debut):
         def b(minute_i, minute_j):
-            b=m.addVar(vtype = GRB.BINARY, name = "helper")
+            b = m.addVar(vtype=GRB.BINARY, name="helper")
             m.addConstr((b == 1) >> (minute_i <= minute_j),
-                        name = "indicator_constr1")
+                        name="indicator_constr1")
             m.addConstr((b == 0) >> (minute_i >= minute_j + 0.5),
-                        name = "indicator_constr2")
+                        name="indicator_constr2")
             return b
 
-        occupation=quicksum([b(minute_i=tache_chantier, minute_j=tache_debut)
-                                for tache_chantier in get_all_tasks_by_name(chantier_cycles[chantier, "start"])])
-        duree=taches_df[taches_df["Type de tache humaine"] == chantier_cycles[chantier, "end"]]["Durée"].iloc[0]
-        occupation=occupation - quicksum([b(minute_i=tache_chantier+duree,
-                                            minute_j=tache_debut)
+        occupation = quicksum([b(minute_i=tache_chantier, minute_j=tache_debut)
+                               for tache_chantier in get_all_tasks_by_name(chantier_cycles[chantier, "start"])])
+        duree = taches_df[taches_df["Type de tache humaine"]
+                          == chantier_cycles[chantier, "end"]]["Durée"].iloc[0]
+        occupation = occupation - quicksum([b(minute_i=tache_chantier+duree,
+                                              minute_j=tache_debut)
                                             for tache_chantier in get_all_tasks_by_name(chantier_cycles[chantier, "end"])])
     for chantier in set(chantiers_df["Chantier"].values):
         print(f"Adding occupation constrainst for: {chantier}...")
