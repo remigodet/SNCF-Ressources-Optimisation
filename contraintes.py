@@ -92,23 +92,15 @@ def generate_contraintes(m, dataframes, var_dict):
 
     ##### Antécedents #####
     temp = []
-    n = 0
-    mm = 0
-    for key in var_dict.keys():
-        print(key)
-        print(len(var_dict[key]))
-    print("sillons totaux ?:", len(var_dict["arrivée Reception"]) + len(var_dict["essai de frein départ"]))
     for tache in var_dict.keys():
         for sillon in var_dict[tache].keys():
             # on ne teste que les taches humaines
             if tache in list(taches_df["Type de tache humaine"]):
-                n += 1
                 ordre = taches_df[taches_df["Type de tache humaine"]
                                 == tache]["Ordre"].iloc[0]  # on stocke l'ordre de la tache
                 type_train = taches_df[taches_df["Type de tache humaine"]
                                     == tache]["Type de train"].iloc[0]  # on stocke le type de train pour faire matcher plus tard avec celui de la tache precedante
                 if ordre > 1:
-                    mm +=1
                     tache_precedante = taches_df[taches_df["Ordre"] == ordre -
                                                 1][taches_df["Type de train"] == type_train]["Type de tache humaine"].iloc[0]
                     temp.append(m.addConstr(var_dict[tache][sillon] >= var_dict[tache_precedante][sillon] +
@@ -121,12 +113,34 @@ def generate_contraintes(m, dataframes, var_dict):
             # if tache == "Dégarage":
             #     m.addConstr(dataframes[tache][sillon] >= dataframes["préparation tri"][sillon] +
             #                 taches_df[taches_df["Type de tache humaine"] == "préparation tri"]["Durée"].iloc[0])
-    print(n)
-    print(mm)
-    print(len(temp))
-    print(len(temp)/217)
+    #print(len(temp))
     ##### Wagons tous présent avant assemblage du sillon #####
     ##### taches humaines (chaines et debut synchro avec les taches machines) #####
+    ##### taches humaines (chaines et debut synchro avec les taches machines) #####
+
+    for tache in var_dict.keys():
+        for sillon in var_dict[tache].keys():
+            ## Débranchement ##
+            if tache == "Débranchement":
+                tache_collee = taches_df[taches_df["Lien machine"]
+                                        == "DEB="]["Type de tache humaine"].iloc[0]
+                # on colle la tache machine a la tache humaine en parallele
+                m.addConstr(var_dict[tache][sillon] ==
+                            var_dict[tache_collee][sillon])
+                ## Dégarage ##
+            elif tache == "Dégarage":
+                tache_collee = taches_df[taches_df["Lien machine"]
+                                        == "DEG="]["Type de tache humaine"].iloc[0]
+                # on colle la tache machine a la tache humaine en parallele
+                m.addConstr(var_dict[tache][sillon] ==
+                            var_dict[tache_collee][sillon])
+                ## Formation ##
+            elif tache == "Formation":
+                tache_collee = taches_df[taches_df["Lien machine"]
+                                        == "FOR="]["Type de tache humaine"].iloc[0]
+                # on colle la tache machine a la tache humaine en parallele
+                m.addConstr(var_dict[tache][sillon] ==
+                            var_dict[tache_collee][sillon])
     ##### Heure de depart du train respectée #####
     ##### heure d'arrivée du train respectée  #####
     ##### Indisponibilités #####
@@ -139,7 +153,7 @@ def generate_contraintes(m, dataframes, var_dict):
                                                                                         taches_df[taches_df["Chantier"] == chantier].Ordre.min()]["Type de tache humaine"].iloc[0]
 
     def get_all_tasks_by_name(name):
-        return dico[name].values()
+        return var_dict[name].values()
 
     def add_occupation_constr(chantier, tache_debut):
         def b(minute_i, minute_j):
