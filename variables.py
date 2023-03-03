@@ -1,5 +1,6 @@
 
 from gurobipy import *
+from tqdm import tqdm
 
 
 def generate_variables(m: Model, dataframes):
@@ -38,7 +39,7 @@ def generate_variables(m: Model, dataframes):
             variables[machines_df.iloc[idx]["Machine"]] = {}
 
     sillons_df = dataframes["sillons_df"]
-    for idx in range(len(sillons_df)):
+    for idx in tqdm(range(len(sillons_df)), desc = "Initialising variables"):
         sillon = sillons_df.iloc[idx]
         # print(sillon["n°TRAIN"])
         if sillon["LDEP"] == "NC":
