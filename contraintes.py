@@ -1,39 +1,42 @@
 from gurobipy import *
 import data
 
+
 def generate_contraintes(m, dataframes, dico):
     taches_df = dataframes["taches_df"]
     machines_df = dataframes["machines_df"]
 
-    machines_dico = {"DEB" : 0,
-                 "FOR" : 1,
-                 "DEG" : 2}
+    machines_dico = {"DEB": 0,
+                     "FOR": 1,
+                     "DEG": 2}
 
-    ##### helper funcs
+    # helper funcs
     M = 1000000
-    def add_constr_abs_sup(m,t2, t1, d):
+
+    def add_constr_abs_sup(m, t2, t1, d):
         '''
         Adds a constraints to model m equal to representing |t2-t1|>=d.
         '''
-        v = m.addVar(vtype = GRB.BINARY, name = f'helper var')
-        m.addConstr((v==1)>>(t2-t1<=0)) # pas necessaire
-        m.addConstr(t2-t1>=d-M*v)
-        m.addConstr(t2-t1<=-d+M*(1-v))
-        
+        v = m.addVar(vtype=GRB.BINARY, name=f'helper var')
+        m.addConstr((v == 1) >> (t2-t1 <= 0))  # pas necessaire
+        m.addConstr(t2-t1 >= d-M*v)
+        m.addConstr(t2-t1 <= -d+M*(1-v))
+
     ##### Anti-Parallélisme des tâches machines #####
     anti_parallel_constrs = []
-    for machine in machines_dico.keys(): #3
-        for sillon_i in dico[machine].keys(): # 
+    for machine in machines_dico.keys():  # 3
+        for sillon_i in dico[machine].keys():
             for sillon_j in dico[machine].keys():
-                if sillon_i!=sillon_j:
+                if sillon_i != sillon_j:
                     # print(sillon_i, sillon_j)
-                    add_constr_abs_sup(m, dico[machine][sillon_i], dico[machine][sillon_j], machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])
+                    add_constr_abs_sup(m, dico[machine][sillon_i], dico[machine][sillon_j],
+                                       machines_df[machines_df["Machine"] == machine]["Duree "].iloc[0])
                     # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] <= dico[machine][sillon_j]) >>((dico[machine][sillon_j] - dico[machine][sillon_i]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
                     # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] >= dico[machine][sillon_j]) >>((dico[machine][sillon_i] - dico[machine][sillon_j]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
                     # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] <= -machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
-    
+
     print("Number of anti-parallel constraints : ", len(anti_parallel_constrs))
-    
+
     ##### Respect des créneaux #####
 
     # for machine in machines_dico.keys():
@@ -85,26 +88,32 @@ def generate_contraintes(m, dataframes, dico):
     #             m.addConstr((debut<=indispTuple[0] and fin<=indispTuple[0]) or (debut>=indispTuple[1] and fin>=indispTuple[1]))
 
     ##### Antécedents #####
+
+    '''for tache in dataframes.keys():
+        for sillon in dataframes[tache].keys():
+            # on ne teste que les taches humaines
+            if tache in list(taches_df["Type de tache humaine"]):
+                ordre = taches_df[taches_df["Type de tache humaine"]
+                                == tache]["Ordre"].iloc[0]  # on stocke l'ordre de la tache
+                type_train = taches_df[taches_df["Type de tache humaine"]
+                                    == tache]["Type de train"].iloc[0]  # on stocke le type de train pour faire matcher plus tard avec celui de la tache precedante
+                if ordre > 1:
+                    tache_precedante = taches_df[taches_df["Ordre"] == ordre -
+                                                1][taches_df["Type de train"] == type_train]["Type de tache humaine"].iloc[0]
+                    m.addConstr(dataframes[tache][sillon] == dataframes[tache_precedante][sillon] +
+                                taches_df[taches_df["Type de tache humaine"] == tache_precedante]["Durée"].iloc[0])  # == car on les enchaîne sinon >=
+            ## Débranchement ##
+            if tache == "Débranchement":
+                m.addConstr(taches_df[tache][sillon] >= dataframes["préparation tri"][sillon] +
+                            taches_df[taches_df["Type de tache humaine"] == "préparation tri"]["Durée"].iloc[0])  # on ajoute les contraintes pour les taches machines a la main
+            ## Dégarage ##
+            if tache == "Dégarage":
+                m.addConstr(dataframes[tache][sillon] >= dataframes["préparation tri"][sillon] +
+                            taches_df[taches_df["Type de tache humaine"] == "préparation tri"]["Durée"].iloc[0])'''
+
     ##### Wagons tous présent avant assemblage du sillon #####
     ##### taches humaines (chaines et debut synchro avec les taches machines) #####
     ##### Heure de depart du train respectée #####
     ##### heure d'arrivée du train respectée  #####
-    ##### Indisponibilités ##### 
+    ##### Indisponibilités #####
     ##### Respect du nombre de voies de chantier #####
-
-
-
-    
-
-
-
-
-
-
-    
-
-
-
-
-            
-
