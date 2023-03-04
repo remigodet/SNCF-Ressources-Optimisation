@@ -1,7 +1,7 @@
 import pandas as pd
 from pandas import read_excel
 from tqdm import tqdm
-# NAME = "instance_WPY_realiste.xls"
+# NAME = "mini_instance.xls"
 NAME = "instance_WPY_realiste.xls"
 data = {}
 p_bar = tqdm(range(6), desc="LOADING DATA")

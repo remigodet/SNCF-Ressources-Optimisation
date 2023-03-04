@@ -283,27 +283,44 @@ def generate_contraintes(m, dataframes, var_dict):
                                                                                         taches_df[taches_df["Chantier"] == chantier].Ordre.min()]["Type de tache humaine"].iloc[0]
 
     def get_all_tasks_by_name(name):
-        return var_dict[name].values()
-
+        return var_dict[name].keys()
+    B = {}
+    def b(tache_i, tache_j, tache_name, duree=0):
+                if (tache_name,tache_i,tache_j) in B.keys():
+                    b = B[tache_name,tache_i,tache_j]
+                    return 1-b
+                else:
+                    b = m.addVar(vtype=GRB.BINARY, name=f"HELPER {tache_name},{tache_i},{tache_j}")
+                    B[tache_name,tache_j,tache_i]= b
+                
+                    m.addConstr((b == 1) >> (var_dict[tache_name][tache_i]+duree <= var_dict[tache_name][tache_j]),
+                                name="indicator_constr1")
+                    m.addConstr((b == 0) >> (var_dict[tache_name][tache_i]+duree >= var_dict[tache_name][tache_j] + 0.5),
+                                name="indicator_constr2")
+                    return b
+    
+    OCCUPATIONS = []
     def add_occupation_constr(chantier, tache_debut):
-        def b(minute_i, minute_j):
-            b = m.addVar(vtype=GRB.BINARY, name="helper")
-            m.addConstr((b == 1) >> (minute_i <= minute_j),
-                        name="indicator_constr1")
-            m.addConstr((b == 0) >> (minute_i >= minute_j + 0.5),
-                        name="indicator_constr2")
-            return b
+        
 
-        occupation = quicksum([b(minute_i=tache_chantier, minute_j=tache_debut)
+        occupation = quicksum([b(tache_chantier,
+                                 tache_debut,
+                                 chantier_cycles[chantier, "start"])
                                for tache_chantier in get_all_tasks_by_name(chantier_cycles[chantier, "start"])])
         duree = taches_df[taches_df["Type de tache humaine"]
                           == chantier_cycles[chantier, "end"]]["Durée"].iloc[0]
-        occupation = occupation - quicksum([b(minute_i=tache_chantier+duree,
-                                              minute_j=tache_debut)
+        occupation = occupation - quicksum([b(tache_chantier,
+                                              tache_debut,
+                                              chantier_cycles[chantier, "start"],
+                                              duree= duree)
                                             for tache_chantier in get_all_tasks_by_name(chantier_cycles[chantier, "end"])])
+        OCCUPATIONS.append(OCCUPATIONS)
         m.addConstr(occupation<=chantiers_df[chantiers_df["Chantier"]==chantier]["Nombre de voies"].iloc[0])
     for chantier in set(chantiers_df["Chantier"].values):
         print(f"Adding occupation constrainst for: {chantier}...")
         for tache_debut in get_all_tasks_by_name(chantier_cycles[chantier, "start"]):
             add_occupation_constr(chantier, tache_debut)
     ##### Horaires de debuts des taches (modulo truc) #####
+    #debug info
+    print("B= ",B)
+    return OCCUPATIONS
