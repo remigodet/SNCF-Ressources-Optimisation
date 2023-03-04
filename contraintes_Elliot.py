@@ -56,3 +56,13 @@ for tache in var_dict.keys():
             m.addConstr(var_dict[tache][sillon] +
                         duree_tache <= var_dict[tache_collee][sillon])
     ##### heure d'arrivée du train respectée  #####
+
+
+for sillon var_dict["FOR"].keys():
+    list_wagons = list(correspondances_df[correspondances_df["train_id"] ==
+                       sillon][correspondances_df["LDEP"] == "WPY"]["id_wagon"])
+    for wagon in list_wagon:
+        sillon_arr = correspondances_df[correspondances_df["id_wagon"] ==
+                                        wagon][correspondances_df["LARR"] == "WPY"]["train_id"].iloc[0]
+        m.addConst(var_dict["DEB"][sillon_arr] + machines_df[machines_df["Machine"]
+                   == "DEB"]["Duree"] <= var_dict["FOR"][sillon])
