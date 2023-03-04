@@ -301,6 +301,7 @@ def generate_contraintes(m, dataframes, var_dict):
         occupation = occupation - quicksum([b(minute_i=tache_chantier+duree,
                                               minute_j=tache_debut)
                                             for tache_chantier in get_all_tasks_by_name(chantier_cycles[chantier, "end"])])
+        m.addConstr(occupation<=chantiers_df[chantiers_df["Chantier"]==chantier]["Nombre de voies"].iloc[0])
     for chantier in set(chantiers_df["Chantier"].values):
         print(f"Adding occupation constrainst for: {chantier}...")
         for tache_debut in get_all_tasks_by_name(chantier_cycles[chantier, "start"]):
