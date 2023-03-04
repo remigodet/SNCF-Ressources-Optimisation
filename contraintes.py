@@ -7,10 +7,8 @@ def generate_contraintes(m, dataframes, var_dict):
     taches_df = dataframes["taches_df"]
     machines_df = dataframes["machines_df"]
     chantiers_df = dataframes["chantiers_df"]
-
-    machines_dico = {"DEB": 0,
-                     "FOR": 1,
-                     "DEG": 2}
+    sillons_df = dataframes["sillons_df"]
+    correspondances_df = dataframes["correspondances_df"]
 
     # helper funcs
     M = 1000000
@@ -52,7 +50,7 @@ def generate_contraintes(m, dataframes, var_dict):
     indisp_dico = {}
     for machine in list(machines_df["Machine"]):
         strTot = machines_df[machines_df["Machine"]
-                            == machine]["Indisponibilites"].iloc[0]
+                             == machine]["Indisponibilites"].iloc[0]
         if strTot != "0":
             strBis = strTot.split(";")
             strTer = []
@@ -108,7 +106,75 @@ def generate_contraintes(m, dataframes, var_dict):
                     temp.append(m.addConstr(var_dict[tache][sillon] == var_dict[tache_precedante][sillon] +
                                 taches_df[taches_df["Type de tache humaine"] == tache_precedante]["Durée"].iloc[0]))  # == car on les enchaîne sinon >=
     # print(len(temp))
+
     ##### Wagons tous présent avant assemblage du sillon #####
+    for sillon in var_dict["FOR"].keys():
+        list_wagons = list(correspondances_df[correspondances_df["train_id"] ==
+                                              sillon][correspondances_df["LDEP"] == "WPY"]["id_wagon"])
+        for wagon in list_wagons:
+            sillon_arr = correspondances_df[correspondances_df["id_wagon"] ==
+                                            wagon][correspondances_df["LARR"] == "WPY"]["train_id"].iloc[0]
+            m.addConst(var_dict["DEB"][sillon_arr] + machines_df[machines_df["Machine"]
+                       == "DEB"]["Duree"] <= var_dict["FOR"][sillon])
+
+    ##### Taches humaines (chaines et debut synchro avec les taches machines) #####
+
+    for tache in var_dict.keys():
+        for sillon in var_dict[tache].keys():
+            ## Débranchement ##
+            if tache == "Débranchement":
+                tache_collee = taches_df[taches_df["Lien machine"]
+                                         == "DEB="]["Type de tache humaine"].iloc[0]
+                # on colle la tache machine a la tache humaine en parallele
+                m.addConstr(var_dict[tache][sillon] ==
+                            var_dict[tache_collee][sillon])
+                ## Dégarage ##
+            elif tache == "Dégarage":
+                tache_collee = taches_df[taches_df["Lien machine"]
+                                         == "DEG="]["Type de tache humaine"].iloc[0]
+                # on colle la tache machine a la tache humaine en parallele
+                m.addConstr(var_dict[tache][sillon] ==
+                            var_dict[tache_collee][sillon])
+                ## Formation ##
+            elif tache == "Formation":
+                tache_collee = taches_df[taches_df["Lien machine"]
+                                         == "FOR="]["Type de tache humaine"].iloc[0]
+                # on colle la tache machine a la tache humaine en parallele
+                m.addConstr(var_dict[tache][sillon] ==
+                            var_dict[tache_collee][sillon])
+
+    #### Horaires respectés ####
+    compteur = 0
+    for tache in var_dict.keys():
+        for sillon in var_dict[tache].keys():
+            ##### Heure de depart du train respectée #####
+            LDEP = sillons_df[sillons_df["train_id"] == sillon]["LDEP"].iloc[0]
+            LARR = sillons_df[sillons_df["train_id"] == sillon]["LARR"].iloc[0]
+            if LDEP == "WPY_DEP":
+                compteur += 1
+                jour = sillons_df[sillons_df["train_id"]
+                                  == sillon]["JDEP"].iloc[0]
+                jour = jour[0:1]
+                str = sillons_df[sillons_df["train_id"]
+                                 == sillon]["HDEP"].iloc[0]
+                [heure, minute] = str.split(":")
+                h_dep = (int(jour)-9)*60*24 + int(heure)*60 + int(minute)
+                # on respecte l'horaire de depart : la derniere tache doit se terminer avant que le train ne parte
+                m.addConstr(var_dict["essai de frein départ"][sillon] +
+                            taches_df[taches_df["Type de tache humaine"] == "essai de frein départ"]["Durée"].iloc[0] <= h_dep)
+
+            ##### Heure d'arrivée du train respectée  #####
+            elif LARR == "WPY_REC":
+                jour = sillons_df[sillons_df["train_id"]
+                                  == sillon]["JARR"].iloc[0]
+                jour = jour[0:1]
+                str = sillons_df[sillons_df["train_id"]
+                                 == sillon]["HARR"].iloc[0]
+                [heure, minute] = str.split(":")
+                h_arr = (int(jour)-9)*60*24 + int(heure)*60 + int(minute)
+                # on respecte l'horaire d'arrivee : la 1ere tache ne peut commencer que lorsque le train est arrivé
+                m.addConstr(var_dict["arrivée Reception"][sillon] >= h_arr)
+    print(compteur)
 
     ##### taches humaines (chaines et debut synchro avec les taches machines) #####
 
