@@ -49,11 +49,11 @@ def generate_contraintes(m, dataframes, var_dict):
 
 ##### Indisponibilités #####
 
-    indisp_dico = {}
+    mach_indisp_dico = {}
     for machine in list(machines_df["Machine"]):
         strTot = machines_df[machines_df["Machine"]
-                            == machine]["Indisponibilites"].iloc[0]
-        if strTot != "0":
+                             == machine]["Indisponibilites"].iloc[0]
+        if strTot != 0:
             strBis = strTot.split(";")
             strTer = []
             for str in strBis:
@@ -83,7 +83,79 @@ def generate_contraintes(m, dataframes, var_dict):
 
                 indispList.append((debut, fin))
 
-            indisp_dico[machine] = indispList
+            mach_indisp_dico[machine] = indispList
+
+    chan_indisp_dico = {}
+    for chantier in list(chantiers_df["Chantier"]):
+        strTot = chantiers_df[chantiers_df["Chantier"]
+                              == chantier]["Indisponibilites"].iloc[0]
+        if strTot != 0:
+            strBis = strTot.split(";")
+            strTer = []
+            for str in strBis:
+                split = str[1:-1].split(",")
+                [str1, str2] = split
+                strTer.append((str1, str2))
+            strQuad = []
+            for (strA, strB) in strTer:
+                [str3, str4] = strB.split("-")
+                strQuad.append((strA, str3, str4))
+
+            strQuint = []
+            for (strA, strC, strD) in strQuad:
+                [strC1, strC2] = strC.split(":")
+                strC3 = int(strC1)*60 + int(strC2)
+                [strD1, strD2] = strD.split(":")
+                strD3 = int(strD1)*60 + int(strD2)
+                strQuint.append((int(strA), strC3, strD3))
+
+            indispList = []
+            for (a, b, c) in strQuint:
+                debut = (a-1)*60*24 + b
+                if c <= b:
+                    fin = a*60*24 + c
+                else:
+                    fin = (a-1)*60*24 + c
+
+                indispList.append((debut, fin))
+
+            chan_indisp_dico[chantier] = indispList
+
+    def no_overlap_indisp(x1, x2, t1, t2, m):
+        A = m.addVar(vtype=GRB.INTEGER, ub=1, lb=0)
+        M = 2000000
+        m.addConstr(M*A+x1-x2-t2 >= 0)
+        m.addConstr(M*(1-A)+x2-x1 - t1 >= 0)
+
+    def indisponnibilites(m):
+        machine_lenght = {'DEB': 20, 'FOR': 15, 'DEG': 15}
+        tache_chantier = {'WPY_REC': ['arrivée Reception', 'préparation tri', 'débranchement'],
+                          'WPY_FOR': ['appui voie + mise en place câle', 'attelage véhicules'],
+                          'WPY_DEP': ['dégarage / bouger de rame', 'essai de frein départ']}
+        humaine_lenght = {'arrivée Reception': 15, 'préparation tri': 45, 'débranchement': 20,
+                          'appui voie + mise en place câle': 15, 'attelage véhicules': 149,
+                          'dégarage / bouger de rame': 15, 'essai de frein départ': 20}
+
+        for machine in mach_indisp_dico.keys():
+            for indisp in mach_indisp_dico[machine]:
+                for tache in var_dict[machine]:
+                    x1 = var_dict[machine][tache]
+                    t1 = machine_lenght[machine]
+                    x2 = indisp[0]
+                    t2 = indisp[1]-indisp[0]
+                    print(x1, x2, t1, t2)
+                    no_overlap_indisp(x1, x2, t1, t2, m)
+
+        for chantier in chan_indisp_dico.keys():
+            for indisp in chan_indisp_dico[chantier]:
+                for type_de_tache in tache_chantier[chantier]:
+                    for tache in var_dict[type_de_tache]:
+                        x1 = var_dict[type_de_tache][tache]
+                        t1 = humaine_lenght[type_de_tache]
+                        x2 = indisp[0]
+                        t2 = indisp[1]-indisp[0]
+                        no_overlap_indisp(x1, x2, t1, t2, m)
+    indisponnibilites(m)
 
     # for machine in machines_dico.keys():
     #     for sillon in dico[machine].keys():
@@ -117,21 +189,21 @@ def generate_contraintes(m, dataframes, var_dict):
             ## Débranchement ##
             if tache == "Débranchement":
                 tache_collee = taches_df[taches_df["Lien machine"]
-                                        == "DEB="]["Type de tache humaine"].iloc[0]
+                                         == "DEB="]["Type de tache humaine"].iloc[0]
                 # on colle la tache machine a la tache humaine en parallele
                 m.addConstr(var_dict[tache][sillon] ==
                             var_dict[tache_collee][sillon])
                 ## Dégarage ##
             elif tache == "Dégarage":
                 tache_collee = taches_df[taches_df["Lien machine"]
-                                        == "DEG="]["Type de tache humaine"].iloc[0]
+                                         == "DEG="]["Type de tache humaine"].iloc[0]
                 # on colle la tache machine a la tache humaine en parallele
                 m.addConstr(var_dict[tache][sillon] ==
                             var_dict[tache_collee][sillon])
                 ## Formation ##
             elif tache == "Formation":
                 tache_collee = taches_df[taches_df["Lien machine"]
-                                        == "FOR="]["Type de tache humaine"].iloc[0]
+                                         == "FOR="]["Type de tache humaine"].iloc[0]
                 # on colle la tache machine a la tache humaine en parallele
                 m.addConstr(var_dict[tache][sillon] ==
                             var_dict[tache_collee][sillon])
