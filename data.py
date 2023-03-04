@@ -47,6 +47,8 @@ def get_id(row):
 
 p_bar.update(1)
 p_bar.refresh()
+data["sillons_df"]["HARR"] = data["sillons_df"].apply(lambda row: str(row["HARR"])[:5], axis=1)
+data["sillons_df"]["HDEP"] = data["sillons_df"].apply(lambda row: str(row["HDEP"])[:5], axis=1)
 data["sillons_df"]["train_id"] = data["sillons_df"].apply(lambda row: str(row["n°TRAIN"])+str(row.JDEP)+str(row.HDEP)+str(row.HARR)+str(row.JARR), axis=1)
 data["correspondances_df"]["train_id"] = data["correspondances_df"].apply( lambda row: get_id(row) , axis=1)
 p_bar.update(1)
