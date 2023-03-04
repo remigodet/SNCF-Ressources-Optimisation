@@ -23,26 +23,26 @@ def generate_contraintes(m, dataframes, var_dict):
         m.addConstr(t2-t1 <= -d+M*(1-v))
 
     ##### Anti-Parallélisme des tâches machines #####
-    # anti_parallel_constrs = []
-    # for machine in machines_dico.keys():  # 3
-    #     for sillon_i in dico[machine].keys():
-    #         for sillon_j in dico[machine].keys():
-    #             if sillon_i != sillon_j:
-    #                 # print(sillon_i, sillon_j)
-    #                 add_constr_abs_sup(m, dico[machine][sillon_i], dico[machine][sillon_j],
+    anti_parallel_constrs = []
+    for machine in machines_dico.keys():  # 3
+        for sillon_i in dico[machine].keys():
+            for sillon_j in dico[machine].keys():
+                if sillon_i != sillon_j:
+                    # print(sillon_i, sillon_j)
+                    add_constr_abs_sup(m, dico[machine][sillon_i], dico[machine][sillon_j],
 
-        #    machines_df[machines_df["Machine"] == machine]["Duree "].iloc[0])
-    #                 # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] <= dico[machine][sillon_j]) >>((dico[machine][sillon_j] - dico[machine][sillon_i]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
-    #                 # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] >= dico[machine][sillon_j]) >>((dico[machine][sillon_i] - dico[machine][sillon_j]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
-    #                 # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] <= -machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
+           machines_df[machines_df["Machine"] == machine]["Duree "].iloc[0])
+                    # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] <= dico[machine][sillon_j]) >>((dico[machine][sillon_j] - dico[machine][sillon_i]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
+                    # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] >= dico[machine][sillon_j]) >>((dico[machine][sillon_i] - dico[machine][sillon_j]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
+                    # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] <= -machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
 
-    # print("Number of anti-parallel constraints : ", len(anti_parallel_constrs))
+    print("Number of anti-parallel constraints : ", len(anti_parallel_constrs))
 
-    ##### Respect des créneaux #####
+    #### Respect des créneaux #####
 
-    # for machine in machines_dico.keys():
-    #     for sillon in dico[machine].keys():
-    #         m.addConstr(dico[machine][sillon] % machines_df["Duree "].iloc[machines_dico[machine]] == 0)
+    for machine in machines_dico.keys():
+        for sillon in dico[machine].keys():
+            m.addConstr(dico[machine][sillon] % machines_df["Duree "].iloc[machines_dico[machine]] == 0)
 
 
 ##### Indisponibilités #####
@@ -274,9 +274,9 @@ def generate_contraintes(m, dataframes, var_dict):
                 m.addConstr(var_dict[tache][sillon] ==
                             var_dict[tache_collee][sillon])
 
-    ##### Heure de depart du train respectée #####
-    ##### heure d'arrivée du train respectée  #####
-    ##### Indisponibilités #####
+    # Heure de depart du train respectée #####
+    # heure d'arrivée du train respectée  #####
+    # Indisponibilités #####
     ##### Respect du nombre de voies de chantier #####
     chantier_cycles = {}
     for chantier in set(taches_df["Chantier"].values):
