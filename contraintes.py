@@ -23,29 +23,28 @@ def generate_contraintes(m, dataframes, var_dict):
         m.addConstr(t2-t1 <= -d+M*(1-v))
 
     ##### Anti-Parallélisme des tâches machines #####
-    anti_parallel_constrs = []
-    for machine in machines_dico.keys():  # 3
-        for sillon_i in dico[machine].keys():
-            for sillon_j in dico[machine].keys():
+    # anti_parallel_constrs = []
+    for machine in machines_df["Machine"]:  # 3
+        for sillon_i in var_dict[machine].keys():
+            for sillon_j in var_dict[machine].keys():
                 if sillon_i != sillon_j:
-                    # print(sillon_i, sillon_j)
-                    add_constr_abs_sup(m, dico[machine][sillon_i], dico[machine][sillon_j],
+                    add_constr_abs_sup(m, var_dict[machine][sillon_i], var_dict[machine][sillon_j],
 
            machines_df[machines_df["Machine"] == machine]["Duree "].iloc[0])
                     # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] <= dico[machine][sillon_j]) >>((dico[machine][sillon_j] - dico[machine][sillon_i]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
                     # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] >= dico[machine][sillon_j]) >>((dico[machine][sillon_i] - dico[machine][sillon_j]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
                     # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] <= -machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
 
-    print("Number of anti-parallel constraints : ", len(anti_parallel_constrs))
+    # print("Number of anti-parallel constraints : ", len(anti_parallel_constrs))
 
-    #### Respect des créneaux #####
+    #### Respect des créneaux ##### DEPRECATED OR NOT WORKING
 
-    for machine in machines_dico.keys():
-        for sillon in dico[machine].keys():
-            m.addConstr(dico[machine][sillon] % machines_df["Duree "].iloc[machines_dico[machine]] == 0)
+    # for machine in machines_dico.keys():
+    #     for sillon in dico[machine].keys():
+    #         m.addConstr(dico[machine][sillon] % machines_df["Duree "].iloc[machines_dico[machine]] == 0)
 
 
-##### Indisponibilités #####
+    ##### Indisponibilités #####
 
     mach_indisp_dico = {}
     for machine in list(machines_df["Machine"]):
@@ -141,7 +140,7 @@ def generate_contraintes(m, dataframes, var_dict):
                     t1 = machine_lenght[machine]
                     x2 = indisp[0]
                     t2 = indisp[1]-indisp[0]
-                    print(x1, x2, t1, t2)
+                    # print(x1, x2, t1, t2)
                     no_overlap_indisp(x1, x2, t1, t2, m)
 
         for chantier in chan_indisp_dico.keys():
@@ -186,8 +185,8 @@ def generate_contraintes(m, dataframes, var_dict):
         for wagon in list_wagons:
             sillon_arr = correspondances_df[correspondances_df["id_wagon"] ==
                                             wagon][correspondances_df["LARR"] == "WPY"]["train_id"].iloc[0]
-            m.addConst(var_dict["DEB"][sillon_arr] + machines_df[machines_df["Machine"]
-                       == "DEB"]["Duree"] <= var_dict["FOR"][sillon])
+            m.addConstr(var_dict["DEB"][sillon_arr] + machines_df[machines_df["Machine"]
+                       == "DEB"]["Duree "] <= var_dict["FOR"][sillon])
 
     ##### Taches humaines (chaines et debut synchro avec les taches machines) #####
 
@@ -215,68 +214,66 @@ def generate_contraintes(m, dataframes, var_dict):
                 m.addConstr(var_dict[tache][sillon] ==
                             var_dict[tache_collee][sillon])
 
-    #### Horaires respectés ####
-    compteur = 0
-    for tache in var_dict.keys():
-        for sillon in var_dict[tache].keys():
-            ##### Heure de depart du train respectée #####
-            LDEP = sillons_df[sillons_df["train_id"] == sillon]["LDEP"].iloc[0]
-            LARR = sillons_df[sillons_df["train_id"] == sillon]["LARR"].iloc[0]
-            if LDEP == "WPY_DEP":
-                compteur += 1
-                jour = sillons_df[sillons_df["train_id"]
-                                  == sillon]["JDEP"].iloc[0]
-                jour = jour[0:1]
-                str = sillons_df[sillons_df["train_id"]
-                                 == sillon]["HDEP"].iloc[0]
-                [heure, minute] = str.split(":")
-                h_dep = (int(jour)-9)*60*24 + int(heure)*60 + int(minute)
-                # on respecte l'horaire de depart : la derniere tache doit se terminer avant que le train ne parte
-                m.addConstr(var_dict["essai de frein départ"][sillon] +
-                            taches_df[taches_df["Type de tache humaine"] == "essai de frein départ"]["Durée"].iloc[0] <= h_dep)
+    #### Horaires respectés #### THIS IS INFEASIBLE
+    # compteur = 0
+    # for tache in var_dict.keys():
+    #     for sillon in var_dict[tache].keys():
+    #         ##### Heure de depart du train respectée #####
+    #         LDEP = sillons_df[sillons_df["train_id"] == sillon]["LDEP"].iloc[0]
+    #         LARR = sillons_df[sillons_df["train_id"] == sillon]["LARR"].iloc[0]
+    #         if LDEP == "WPY_DEP":
+    #             compteur += 1
+    #             jour = sillons_df[sillons_df["train_id"]
+    #                               == sillon]["JDEP"].iloc[0]
+    #             jour = jour[0:1]
+    #             str = sillons_df[sillons_df["train_id"]
+    #                              == sillon]["HDEP"].iloc[0]
+    #             [heure, minute] = str.split(":")
+    #             h_dep = (int(jour)-9)*60*24 + int(heure)*60 + int(minute)
+    #             # on respecte l'horaire de depart : la derniere tache doit se terminer avant que le train ne parte
+    #             m.addConstr(var_dict["essai de frein départ"][sillon] +
+    #                         taches_df[taches_df["Type de tache humaine"] == "essai de frein départ"]["Durée"].iloc[0] <= h_dep)
 
-            ##### Heure d'arrivée du train respectée  #####
-            elif LARR == "WPY_REC":
-                jour = sillons_df[sillons_df["train_id"]
-                                  == sillon]["JARR"].iloc[0]
-                jour = jour[0:1]
-                str = sillons_df[sillons_df["train_id"]
-                                 == sillon]["HARR"].iloc[0]
-                [heure, minute] = str.split(":")
-                h_arr = (int(jour)-9)*60*24 + int(heure)*60 + int(minute)
-                # on respecte l'horaire d'arrivee : la 1ere tache ne peut commencer que lorsque le train est arrivé
-                m.addConstr(var_dict["arrivée Reception"][sillon] >= h_arr)
-    print(compteur)
+    #         ##### Heure d'arrivée du train respectée  #####
+    #         elif LARR == "WPY_REC":
+    #             jour = sillons_df[sillons_df["train_id"]
+    #                               == sillon]["JARR"].iloc[0]
+    #             jour = jour[0:1]
+    #             str = sillons_df[sillons_df["train_id"]
+    #                              == sillon]["HARR"].iloc[0]
+    #             [heure, minute] = str.split(":")
+    #             h_arr = (int(jour)-9)*60*24 + int(heure)*60 + int(minute)
+    #             # on respecte l'horaire d'arrivee : la 1ere tache ne peut commencer que lorsque le train est arrivé
+    #             m.addConstr(var_dict["arrivée Reception"][sillon] >= h_arr)
+    # print(compteur)
 
-    ##### taches humaines (chaines et debut synchro avec les taches machines) #####
+    ##### taches humaines (chaines et debut synchro avec les taches machines) ##### DUPLICATE
 
-    for tache in var_dict.keys():
-        for sillon in var_dict[tache].keys():
-            ## Débranchement ##
-            if tache == "Débranchement":
-                tache_collee = taches_df[taches_df["Lien machine"]
-                                         == "DEB="]["Type de tache humaine"].iloc[0]
-                # on colle la tache machine a la tache humaine en parallele
-                m.addConstr(var_dict[tache][sillon] ==
-                            var_dict[tache_collee][sillon])
-                ## Dégarage ##
-            elif tache == "Dégarage":
-                tache_collee = taches_df[taches_df["Lien machine"]
-                                         == "DEG="]["Type de tache humaine"].iloc[0]
-                # on colle la tache machine a la tache humaine en parallele
-                m.addConstr(var_dict[tache][sillon] ==
-                            var_dict[tache_collee][sillon])
-                ## Formation ##
-            elif tache == "Formation":
-                tache_collee = taches_df[taches_df["Lien machine"]
-                                         == "FOR="]["Type de tache humaine"].iloc[0]
-                # on colle la tache machine a la tache humaine en parallele
-                m.addConstr(var_dict[tache][sillon] ==
-                            var_dict[tache_collee][sillon])
+    # for tache in var_dict.keys():
+    #     for sillon in var_dict[tache].keys():
+    #         ## Débranchement ##
+    #         if tache == "Débranchement":
+    #             tache_collee = taches_df[taches_df["Lien machine"]
+    #                                      == "DEB="]["Type de tache humaine"].iloc[0]
+    #             # on colle la tache machine a la tache humaine en parallele
+    #             m.addConstr(var_dict[tache][sillon] ==
+    #                         var_dict[tache_collee][sillon])
+    #             ## Dégarage ##
+    #         elif tache == "Dégarage":
+    #             tache_collee = taches_df[taches_df["Lien machine"]
+    #                                      == "DEG="]["Type de tache humaine"].iloc[0]
+    #             # on colle la tache machine a la tache humaine en parallele
+    #             m.addConstr(var_dict[tache][sillon] ==
+    #                         var_dict[tache_collee][sillon])
+    #             ## Formation ##
+    #         elif tache == "Formation":
+    #             tache_collee = taches_df[taches_df["Lien machine"]
+    #                                      == "FOR="]["Type de tache humaine"].iloc[0]
+    #             # on colle la tache machine a la tache humaine en parallele
+    #             m.addConstr(var_dict[tache][sillon] ==
+    #                         var_dict[tache_collee][sillon])
 
-    # Heure de depart du train respectée #####
-    # heure d'arrivée du train respectée  #####
-    # Indisponibilités #####
+    
     ##### Respect du nombre de voies de chantier #####
     chantier_cycles = {}
     for chantier in set(taches_df["Chantier"].values):
@@ -308,3 +305,4 @@ def generate_contraintes(m, dataframes, var_dict):
         print(f"Adding occupation constrainst for: {chantier}...")
         for tache_debut in get_all_tasks_by_name(chantier_cycles[chantier, "start"]):
             add_occupation_constr(chantier, tache_debut)
+    ##### Horaires de debuts des taches (modulo truc) #####
