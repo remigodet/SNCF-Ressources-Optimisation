@@ -39,9 +39,11 @@ def generate_contraintes(m, dataframes, var_dict):
 
     #### Respect des créneaux ##### DEPRECATED OR NOT WORKING
 
-    # for machine in machines_dico.keys():
-    #     for sillon in dico[machine].keys():
-    #         m.addConstr(dico[machine][sillon] % machines_df["Duree "].iloc[machines_dico[machine]] == 0)
+    for machine in ["DEB", "FOR", "DEG"]:
+        duree = taches_df[taches_df["Machine"]==machine]["Duree"]
+        for sillon in var_dict[machine].keys():
+            c = m.addVar(vtype = GRB.INTEGER)
+            m.addConstr(var_dict[machine][sillon] == c * duree)
 
 
     ##### Indisponibilités #####
@@ -154,12 +156,9 @@ def generate_contraintes(m, dataframes, var_dict):
                         no_overlap_indisp(x1, x2, t1, t2, m)
     indisponnibilites(m)
 
-    # for machine in machines_dico.keys():
-    #     for sillon in dico[machine].keys():
-    #         for indispTuple in indisp_dico[machine]:
-    #             debut = dico[machine][sillon]
-    #             fin = debut + machines_df["Duree "].iloc[machines_dico[machine]]
-    #             m.addConstr((debut<=indispTuple[0] and fin<=indispTuple[0]) or (debut>=indispTuple[1] and fin>=indispTuple[1]))
+    
+            
+        
 
     ##### Antécedents #####
     temp = []
