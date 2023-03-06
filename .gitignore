@@ -7,7 +7,8 @@ __pycache__/
 *.so
 
 #data
-results/*
+results/*.xlsx
+results/old/*.xlsx
 
 # Distribution / packaging
 .Python
