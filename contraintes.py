@@ -4,6 +4,12 @@ from tqdm import tqdm
 
 
 def generate_contraintes(m, dataframes, var_dict):
+
+    #tqdm 
+    NB_CONTRAINTES = 8
+    p_bar = tqdm(range(NB_CONTRAINTES), desc="BUILDING CONSTRAINTS")
+
+
     taches_df = dataframes["taches_df"]
     machines_df = dataframes["machines_df"]
     chantiers_df = dataframes["chantiers_df"]
@@ -36,16 +42,18 @@ def generate_contraintes(m, dataframes, var_dict):
                     # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] <= -machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
 
     # print("Number of anti-parallel constraints : ", len(anti_parallel_constrs))
-
+    p_bar.update(1)
+    p_bar.refresh()
     #### Respect des créneaux ##### DEPRECATED OR NOT WORKING
-
-    for machine in ["DEB", "FOR", "DEG"]:
-        duree = taches_df[taches_df["Machine"]==machine]["Duree"]
+    # for machine in ["DEB", "FOR", "DEG"]: ALL MACHINES
+    for machine in ["DEB","FOR","DEG"]: # DEBUG 
+        duree = machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0]
+        print(duree)
         for sillon in var_dict[machine].keys():
-            c = m.addVar(vtype = GRB.INTEGER)
-            m.addConstr(var_dict[machine][sillon] == c * duree)
-
-
+            m.addConstr(var_dict[machine][sillon] == m.addVar(vtype = GRB.INTEGER, name=f"helper-creneau-{machine}-{sillon}") * duree)
+    
+    p_bar.update(1)
+    p_bar.refresh()
     ##### Indisponibilités #####
 
     mach_indisp_dico = {}
@@ -156,7 +164,8 @@ def generate_contraintes(m, dataframes, var_dict):
                         no_overlap_indisp(x1, x2, t1, t2, m)
     indisponnibilites(m)
 
-    
+    p_bar.update(1)
+    p_bar.refresh()
             
         
 
@@ -173,25 +182,22 @@ def generate_contraintes(m, dataframes, var_dict):
                 if ordre > 1:
                     tache_precedante = taches_df[taches_df["Ordre"] == ordre -
                                                  1][taches_df["Type de train"] == type_train]["Type de tache humaine"].iloc[0]
-                    temp.append(m.addConstr(var_dict[tache][sillon] == var_dict[tache_precedante][sillon] +
+                    temp.append(m.addConstr(var_dict[tache][sillon] >= var_dict[tache_precedante][sillon] +
                                 taches_df[taches_df["Type de tache humaine"] == tache_precedante]["Durée"].iloc[0]))  # == car on les enchaîne sinon >=
     # print(len(temp))
-
+    p_bar.update(1)
+    p_bar.refresh()
     ##### Wagons tous présent avant assemblage du sillon #####
     for sillon in var_dict["FOR"].keys():
         list_wagons = list(correspondances_df[correspondances_df["train_id"] ==
                                               sillon][correspondances_df["LDEP"] == "WPY"]["id_wagon"])
-        if "54086" in sillon:
-            print("debug sillons")
-            print(sillon)
-            print(list_wagons)
         for wagon in list_wagons:
             sillon_arr = correspondances_df[correspondances_df["id_wagon"] ==
                                             wagon][correspondances_df["LARR"] == "WPY"]["train_id"].iloc[0]
             m.addConstr(var_dict["DEB"][sillon_arr] + machines_df[machines_df["Machine"]
                        == "DEB"]["Duree "] <= var_dict["FOR"][sillon])
-            if "54086" in sillon:
-                print(sillon_arr)   
+    p_bar.update(1)
+    p_bar.refresh()
     ##### Taches humaines (chaines et debut synchro avec les taches machines) #####
 
     for tache in var_dict.keys():
@@ -217,7 +223,8 @@ def generate_contraintes(m, dataframes, var_dict):
                 # on colle la tache machine a la tache humaine en parallele
                 m.addConstr(var_dict[tache][sillon] ==
                             var_dict[tache_collee][sillon])
-
+    p_bar.update(1)
+    p_bar.refresh()
     #### Horaires respectés #### 
     compteur = 0
     
@@ -253,9 +260,10 @@ def generate_contraintes(m, dataframes, var_dict):
             h_arr = (int(jour)-8)*60*24 + int(heure)*60 + int(minute)
             # on respecte l'horaire d'arrivee : la 1ere tache ne peut commencer que lorsque le train est arrivé
             m.addConstr(var_dict["arrivée Reception"][sillon] >= h_arr)
-    print("compteur for horaires", compteur)
+    # print("compteur for horaires", compteur)
 
-    
+    p_bar.update(1)
+    p_bar.refresh()
     ##### Respect du nombre de voies de chantier #####
     chantier_cycles = {}
     for chantier in set(taches_df["Chantier"].values):
@@ -303,6 +311,9 @@ def generate_contraintes(m, dataframes, var_dict):
         print(f"Adding occupation constrainst for: {chantier}...")
         for tache_debut in get_all_tasks_by_name(chantier_cycles[chantier, "start"]):
             add_occupation_constr(chantier, tache_debut)
+    p_bar.update(1)
+    p_bar.refresh()
+    print()
     ##### Horaires de debuts des taches (modulo truc) #####
     #debug info
     # print("B= ",B)

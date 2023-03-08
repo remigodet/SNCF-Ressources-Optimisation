@@ -55,7 +55,8 @@ def generate_variables(m: Model, dataframes):
             # add all taches departure
             add_departure_tasks(sillon)
         else:
-            raise Exception("LDEP of sillon not recognized ! ")
+            raise Exception(f"LDEP: '{sillon['LDEP']}' of sillon not recognized ! ")
+    print()
     return variables
 
 
