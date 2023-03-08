@@ -1,5 +1,6 @@
-# Fichier pour présenter correctement les solutions
+# Fichier avec les fonctions qu'on utilise dans nos codes
 
+# Fonction qui convertit le nombre de minutes en format ("jj/mm", "hh:mm")
 def min_to_jour(min):
     mois = "08"
     j = int(min//(60*24) + 8)
