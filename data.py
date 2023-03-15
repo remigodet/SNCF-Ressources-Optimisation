@@ -24,6 +24,21 @@ data["correspondances_df"] = pd.read_excel(
     f"./Data SNCF/{NAME}", sheet_name="Correspondances")
 p_bar.update(1)
 p_bar.refresh()
+
+## on crée les dataframes pour les humains
+data["roulements_df"] = pd.read_excel(
+    f"./Data SNCF/{NAME}", sheet_name="Roulements agents")
+p_bar.update(1)
+p_bar.refresh()
+data["connaissances_df"] = pd.read_excel(
+    f"./Data SNCF/{NAME}", sheet_name="Connaissances taches")
+p_bar.update(1)
+p_bar.refresh()
+data["repositionnements_df"] = pd.read_excel(
+    f"./Data SNCF/{NAME}", sheet_name="Repositionnements")
+p_bar.update(1)
+p_bar.refresh()
+
 # update sillon to unique names :
 # print(data["sillons_df"])
 
