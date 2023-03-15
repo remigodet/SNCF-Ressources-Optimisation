@@ -365,7 +365,7 @@ def generate_contraintes(m, dataframes, var_dict):
                     name="indicator_constr2")
         return bb
     
-    OCCUPATIONS = []
+    OCCUPATIONS = {"DEB":[], "FOR":[], "DEG":[]}
     # adding occupations 
     ### DEB ###
     # getting all sillons to loop over and add constrs 
@@ -391,7 +391,7 @@ def generate_contraintes(m, dataframes, var_dict):
             for sillon_dep in var_dict["arrivée Reception"].keys()    
         ])
         occupation = pos_sum - neg_sum
-        OCCUPATIONS.append(occupation)
+        OCCUPATIONS["DEB"].append(occupation)
         m.addConstr(occupation<=chantiers_df[chantiers_df["Chantier"]=="WPY_REC"]["Nombre de voies"].iloc[0])
         
     ### FOR ###
@@ -439,7 +439,7 @@ def generate_contraintes(m, dataframes, var_dict):
             for sillon_deg in var_dict["dégarage / bouger de rame"].keys()    
         ])
         occupation = pos_sum - neg_sum
-        OCCUPATIONS.append(occupation)
+        OCCUPATIONS["FOR"].append(occupation)
         m.addConstr(occupation<=chantiers_df[chantiers_df["Chantier"]=="WPY_FOR"]["Nombre de voies"].iloc[0])
     
     ### DEG ###
@@ -465,7 +465,7 @@ def generate_contraintes(m, dataframes, var_dict):
             for sillon_dep in var_dict["dégarage / bouger de rame"].keys()    
         ])
         occupation = pos_sum - neg_sum
-        OCCUPATIONS.append(occupation)
+        OCCUPATIONS["DEG"].append(occupation)
         m.addConstr(occupation<=chantiers_df[chantiers_df["Chantier"]=="WPY_DEP"]["Nombre de voies"].iloc[0])
     
     p_bar.update(1)
