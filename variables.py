@@ -51,11 +51,12 @@ def generate_variables(m: Model, dataframes):
         if sillon["LDEP"] == "NC":
             # add all taches arrival
             add_arrival_tasks(sillon)
-        elif sillon["LDEP"] == "WPY_DEP":
+        elif sillon["LDEP"] in ["WPY_DEP", "WPY"]:
             # add all taches departure
             add_departure_tasks(sillon)
         else:
-            raise Exception("LDEP of sillon not recognized ! ")
+            raise Exception(f"LDEP: '{sillon['LDEP']}' of sillon not recognized ! ")
+    print()
     return variables
 
 
