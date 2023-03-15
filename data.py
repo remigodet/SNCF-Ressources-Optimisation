@@ -2,7 +2,7 @@ import pandas as pd
 from pandas import read_excel
 from tqdm import tqdm
 # NAME = "mini_instance.xls"
-NAME = "instance_WPY_realiste_corrigee2.xls"
+NAME = "instance_WPY_realiste_corrigee3.xls"
 data = {}
 p_bar = tqdm(range(6), desc="LOADING DATA")
 data["taches_df"] = pd.read_excel(f"./Data SNCF/{NAME}", sheet_name="Taches humaines")
