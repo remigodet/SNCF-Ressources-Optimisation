@@ -1,7 +1,6 @@
 from gurobipy import *
-import data
 import utils
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 
 def generate_contraintes(m, dataframes, var_dict):
@@ -213,29 +212,29 @@ def generate_contraintes(m, dataframes, var_dict):
     p_bar.refresh()
     ##### Taches humaines (chaines et debut synchro avec les taches machines) #####
 
-    for tache in var_dict.keys():
-        for sillon in var_dict[tache].keys():
-            ## Débranchement ##
-            if tache == "DEB":
-                tache_collee = taches_df[taches_df["Lien machine"]
-                                         == "DEB="]["Type de tache humaine"].iloc[0]
-                # on colle la tache machine a la tache humaine en parallele
-                m.addConstr(var_dict[tache][sillon] ==
-                            var_dict[tache_collee][sillon])
-                ## Dégarage ##
-            elif tache == "DEG":
-                tache_collee = taches_df[taches_df["Lien machine"]
-                                         == "DEG="]["Type de tache humaine"].iloc[0]
-                # on colle la tache machine a la tache humaine en parallele
-                m.addConstr(var_dict[tache][sillon] ==
-                            var_dict[tache_collee][sillon])
-                ## Formation ##
-            elif tache == "FOR":
-                tache_collee = taches_df[taches_df["Lien machine"]
-                                         == "FOR="]["Type de tache humaine"].iloc[0]
-                # on colle la tache machine a la tache humaine en parallele
-                m.addConstr(var_dict[tache][sillon] ==
-                            var_dict[tache_collee][sillon])
+    # for tache in var_dict.keys():
+    #     for sillon in var_dict[tache].keys():
+    #         ## Débranchement ##
+    #         if tache == "DEB":
+    #             tache_collee = taches_df[taches_df["Lien machine"]
+    #                                      == "DEB="]["Type de tache humaine"].iloc[0]
+    #             # on colle la tache machine a la tache humaine en parallele
+    #             m.addConstr(var_dict[tache][sillon] ==
+    #                         var_dict[tache_collee][sillon])
+    #             ## Dégarage ##
+    #         elif tache == "DEG":
+    #             tache_collee = taches_df[taches_df["Lien machine"]
+    #                                      == "DEG="]["Type de tache humaine"].iloc[0]
+    #             # on colle la tache machine a la tache humaine en parallele
+    #             m.addConstr(var_dict[tache][sillon] ==
+    #                         var_dict[tache_collee][sillon])
+    #             ## Formation ##
+    #         elif tache == "FOR":
+    #             tache_collee = taches_df[taches_df["Lien machine"]
+    #                                      == "FOR="]["Type de tache humaine"].iloc[0]
+    #             # on colle la tache machine a la tache humaine en parallele
+    #             m.addConstr(var_dict[tache][sillon] ==
+    #                         var_dict[tache_collee][sillon])
     p_bar.update(1)
     p_bar.refresh()
     #### Horaires respectés #### 
@@ -474,4 +473,5 @@ def generate_contraintes(m, dataframes, var_dict):
     ##### Horaires de debuts des taches (modulo truc) #####
     #debug info
     # print("B= ",B)
+    m.update()
     return B,OCCUPATIONS

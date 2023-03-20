@@ -9,6 +9,7 @@ __pycache__/
 #data
 results/*.xlsx
 results/old/*.xlsx
+Data SNCF/*
 
 # Distribution / packaging
 .Python
