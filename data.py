@@ -2,9 +2,9 @@ import pandas as pd
 from pandas import read_excel
 from tqdm import tqdm
 # NAME = "mini_instance.xls"
-NAME = "instance_WPY_realiste_corrigee2.xls"
+NAME = "instance_WPY_realiste_jalon2.xls"
 data = {}
-p_bar = tqdm(range(6), desc="LOADING DATA")
+p_bar = tqdm(range(7), desc="LOADING DATA")
 data["taches_df"] = pd.read_excel(f"./Data SNCF/{NAME}", sheet_name="Taches humaines")
 p_bar.update(1)
 p_bar.refresh()
@@ -18,6 +18,9 @@ data["sillons_df"] = pd.read_excel(f"./Data SNCF/{NAME}", sheet_name="Sillons")
 p_bar.update(1)
 p_bar.refresh()
 data["correspondances_df"] = pd.read_excel(f"./Data SNCF/{NAME}", sheet_name="Correspondances")
+p_bar.update(1)
+p_bar.refresh()
+data["roulements_df"] = pd.read_excel(f"./Data SNCF/{NAME}", sheet_name="Roulements agents")
 p_bar.update(1)
 p_bar.refresh()
 # update sillon to unique names :

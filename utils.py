@@ -1,5 +1,4 @@
-# Fichier pour présenter correctement les solutions
-
+## Fonction pour présenter correctement les solutions
 def min_to_jour(min):
     mois = "08"
     j = int(min//(60*24) + 8)
@@ -29,3 +28,29 @@ def get_min_from_sillonid(HJCHOICE, sillon_id, sillons_df):
     [heure, minute] = heure.split(":")
     h_dep = (int(jour)-8)*60*24 + int(heure)*60 + int(minute)
     return h_dep
+
+## Fonction pour collecter le début et la fin de la journée de service en minutes
+def get_min_from_rajc(r,j,c, roulements_df):
+    '''
+    return:  minute_start, minute_end
+    For now, we don't sparse minutes. 
+    '''
+    try:
+        cycle = roulements_df[roulements_df["Roulement"]==r]["Cycles horaires"].iloc[0]
+        cycle = cycle.split(";")
+        cycle = cycle[c-1]
+        cycle = cycle.split("-")
+        cycle_start = int(cycle[0][:2])
+        cycle_end = int(cycle[1][:2])
+        minute_start = j*24*60 + cycle_start*60
+        minute_end = j*24*60 + cycle_end*60
+    except:
+        raise Exception("error", r,j,c)
+    return minute_start, minute_end
+    
+    
+if __name__ == "__main__":
+    import data
+    dataframes = data.get_all_pandas()
+    roulements_df = dataframes["roulements_df"]
+    get_min_from_rajc("roulement_reception",0,1, roulements_df=roulements_df)
