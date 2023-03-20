@@ -14,57 +14,57 @@ def generate_contraintes(m, dataframes, var_dict, links_dict):
     roulements_df = dataframes["roulements_df"]
     # links_dict = tache_name,tache,roulement,a,jour,c
     
-    # ##### c1: 1 JS par tache ####
-    # for tache_name in var_dict.keys():
-    #     for target_tache in var_dict[tache_name].keys():
-    #         temp = []
-    #         for tache_name_key, tache_key, r,a,j,c in links_dict.keys():
-    #             if tache_name_key==tache_name and tache_key==target_tache:
-    #                 temp.append(links_dict[tache_name, target_tache, r,a,j,c])
-    #         nb_of_jds = quicksum(temp)
-    #         m.addConstr(nb_of_jds==1)    
+    ##### c1: 1 JS par tache ####
+    for tache_name in var_dict.keys():
+        for target_tache in var_dict[tache_name].keys():
+            temp = []
+            for tache_name_key, tache_key, r,a,j,c in links_dict.keys():
+                if tache_name_key==tache_name and tache_key==target_tache:
+                    temp.append(links_dict[tache_name, target_tache, r,a,j,c])
+            nb_of_jds = quicksum(temp)
+            m.addConstr(nb_of_jds==1)    
     
     
-    # p_bar.update(1)
-    # p_bar.refresh()
-    # ##### c2 : tache au bon moment ####
-    # for tache_name in var_dict.keys():
-    #     for target_tache in var_dict[tache_name].keys():
-    #         for tache_name_key, tache_key, r,a,j,c in links_dict.keys():
-    #             if tache_name_key==tache_name and tache_key==target_tache:
-    #                 minute_start, minute_end = utils.get_min_from_rajc(r,j,c,roulements_df)
-    #                 m.addConstr(minute_start*links_dict[tache_name_key, tache_key, r,a,j,c] <= var_dict[tache_name][target_tache])
-    #                 duree = int(taches_df[taches_df["Type de tache humaine"]==tache_name]["Durée"].iloc[0])
-    #                 m.addConstr((var_dict[tache_name][target_tache]+duree)*links_dict[tache_name_key, tache_key, r,a,j,c] <= minute_end)
+    p_bar.update(1)
+    p_bar.refresh()
+    ##### c2 : tache au bon moment ####
+    for tache_name in var_dict.keys():
+        for target_tache in var_dict[tache_name].keys():
+            for tache_name_key, tache_key, r,a,j,c in links_dict.keys():
+                if tache_name_key==tache_name and tache_key==target_tache:
+                    minute_start, minute_end = utils.get_min_from_rajc(r,j,c,roulements_df)
+                    m.addConstr(minute_start*links_dict[tache_name_key, tache_key, r,a,j,c] <= var_dict[tache_name][target_tache])
+                    duree = int(taches_df[taches_df["Type de tache humaine"]==tache_name]["Durée"].iloc[0])
+                    m.addConstr((var_dict[tache_name][target_tache]+duree)*links_dict[tache_name_key, tache_key, r,a,j,c] <= minute_end)
     
-    # p_bar.update(1)
-    # p_bar.refresh()
-    # ##### c3 : 1 cycle par jour par agent ####
-    # for roulement in roulements_df["Roulement"]:
-    #     for a in range(1, roulements_df[roulements_df["Roulement"]==roulement]["Nombre agents"].iloc[0]+1):
-    #         for j in range(1,len(set(dataframes["sillons_df"]["JDEP"]))):
-    #             # raj
-    #             all_cycle_indicatrices = []
-    #             for c in range(1,4):
-    #                 if str(j%7) in roulements_df[roulements_df["Roulement"]==roulement]["Jours de la semaine"].iloc[0].split(";"):
-    #                     #rajc                        
-    #                     temp = []
-    #                     for chantier in roulements_df[roulements_df["Roulement"]==roulement]["Connaissances chantiers"]:
-    #                         for tache_name in taches_df[taches_df["Chantier"]==chantier]["Type de tache humaine"]:
-    #                             for target_tache in var_dict[tache_name].keys():
-    #                                 # all vars 
-    #                                 if (tache_name,target_tache,roulement,a,j,c) in  links_dict.keys():
-    #                                     temp.append(links_dict[tache_name,target_tache,roulement,a,j,c])
-    #                     # indicatrice == sum of JDS of cycle
-    #                     var = m.addVar(vtype=GRB.INTEGER,name= "HELPER with single cycle per worked day")
-    #                     all_cycle_indicatrices.append(var)
-    #                     m.addConstr((var==1)>>(quicksum(temp)>=1))
-    #                     m.addConstr((var==0)>>(quicksum(temp)<=0))       
-    #             # raj                    
-    #             #sum indicatrice  + constraint  
-    #             m.addConstr(quicksum(all_cycle_indicatrices)<=1)     
-    # p_bar.update(1)
-    # p_bar.refresh()                    
+    p_bar.update(1)
+    p_bar.refresh()
+    ##### c3 : 1 cycle par jour par agent ####
+    for roulement in roulements_df["Roulement"]:
+        for a in range(1, roulements_df[roulements_df["Roulement"]==roulement]["Nombre agents"].iloc[0]+1):
+            for j in range(1,len(set(dataframes["sillons_df"]["JDEP"]))):
+                # raj
+                all_cycle_indicatrices = []
+                for c in range(1,4):
+                    if str(j%7) in roulements_df[roulements_df["Roulement"]==roulement]["Jours de la semaine"].iloc[0].split(";"):
+                        #rajc                        
+                        temp = []
+                        for chantier in roulements_df[roulements_df["Roulement"]==roulement]["Connaissances chantiers"]:
+                            for tache_name in taches_df[taches_df["Chantier"]==chantier]["Type de tache humaine"]:
+                                for target_tache in var_dict[tache_name].keys():
+                                    # all vars 
+                                    if (tache_name,target_tache,roulement,a,j,c) in  links_dict.keys():
+                                        temp.append(links_dict[tache_name,target_tache,roulement,a,j,c])
+                        # indicatrice == sum of JDS of cycle
+                        var = m.addVar(vtype=GRB.INTEGER,name= "HELPER with single cycle per worked day")
+                        all_cycle_indicatrices.append(var)
+                        m.addConstr((var==1)>>(quicksum(temp)>=1))
+                        m.addConstr((var==0)>>(quicksum(temp)<=0))       
+                # raj                    
+                #sum indicatrice  + constraint  
+                m.addConstr(quicksum(all_cycle_indicatrices)<=1)     
+    p_bar.update(1)
+    p_bar.refresh()                    
     ##### c4 : non superposition  ####
     print("Starting C4")
     B = {}
@@ -116,7 +116,7 @@ def generate_contraintes(m, dataframes, var_dict, links_dict):
     # links_dict = tache_name,tache,roulement,a,jour,c
     import time
     t = time.time()
-    for tache_name,target_tache,roulement,a,jour,c in tqdm(links_dict.keys()): #with tqdm
+    for tache_name,target_tache,roulement,a,jour,c in tqdm(sorted(links_dict.keys(), key=lambda x:(x[3],x[5],x[4]))): #with tqdm
     # for tache_name,target_tache,roulement,a,jour,c in links_dict.keys():
         
         chantier = taches_df[taches_df["Type de tache humaine"]==tache_name]["Chantier"].iloc[0]
@@ -152,11 +152,11 @@ def generate_contraintes(m, dataframes, var_dict, links_dict):
         m.addConstr(pos_neg_sum<=1)
         
         
-        print("---")
-        print(tache_name,target_tache,roulement,a,jour,c)
-        print(len(other_tache_list))
-        print(time.time()-t)
-        t=time.time()
+        # print("---")
+        # print(tache_name,target_tache,roulement,a,jour,c)
+        # print(len(other_tache_list))
+        # print(time.time()-t)
+        # t=time.time()
     p_bar.update(1)
     p_bar.refresh()    
         # get all other chantier task + links to check

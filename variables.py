@@ -80,7 +80,7 @@ def generate_variablesJ2(m: Model, var_dict, dataframes):
                                         ok = sillon_arrives <= jds_start
                                     elif chantier in ["WPY_FOR", "WPY_DEP"]:
                                         sillon_departs= utils.get_min_from_sillonid("DEP",tache,sillons_df)
-                                        ok = jds_start <= sillon_departs
+                                        ok = jds_end <= sillon_departs
                                     else:
                                         raise Exception("Chantier not found:", chantier)
                                     if ok:
