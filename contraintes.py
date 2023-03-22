@@ -211,35 +211,37 @@ def generate_contraintes(m, dataframes, var_dict):
     p_bar.update(1)
     p_bar.refresh()
     ##### Taches humaines (chaines et debut synchro avec les taches machines) #####
-
-    # for tache in var_dict.keys():
-    #     for sillon in var_dict[tache].keys():
-    #         ## Débranchement ##
-    #         if tache == "DEB":
-    #             tache_collee = taches_df[taches_df["Lien machine"]
-    #                                      == "DEB="]["Type de tache humaine"].iloc[0]
-    #             # on colle la tache machine a la tache humaine en parallele
-    #             m.addConstr(var_dict[tache][sillon] ==
-    #                         var_dict[tache_collee][sillon])
-    #             ## Dégarage ##
-    #         elif tache == "DEG":
-    #             tache_collee = taches_df[taches_df["Lien machine"]
-    #                                      == "DEG="]["Type de tache humaine"].iloc[0]
-    #             # on colle la tache machine a la tache humaine en parallele
-    #             m.addConstr(var_dict[tache][sillon] ==
-    #                         var_dict[tache_collee][sillon])
-    #             ## Formation ##
-    #         elif tache == "FOR":
-    #             tache_collee = taches_df[taches_df["Lien machine"]
-    #                                      == "FOR="]["Type de tache humaine"].iloc[0]
-    #             # on colle la tache machine a la tache humaine en parallele
-    #             m.addConstr(var_dict[tache][sillon] ==
-    #                         var_dict[tache_collee][sillon])
+    # uncomment for J1
+    '''
+    for tache in var_dict.keys():
+        for sillon in var_dict[tache].keys():
+            ## Débranchement ##
+            if tache == "DEB":
+                tache_collee = taches_df[taches_df["Lien machine"]
+                                         == "DEB="]["Type de tache humaine"].iloc[0]
+                # on colle la tache machine a la tache humaine en parallele
+                m.addConstr(var_dict[tache][sillon] ==
+                            var_dict[tache_collee][sillon])
+                ## Dégarage ##
+            elif tache == "DEG":
+                tache_collee = taches_df[taches_df["Lien machine"]
+                                         == "DEG="]["Type de tache humaine"].iloc[0]
+                # on colle la tache machine a la tache humaine en parallele
+                m.addConstr(var_dict[tache][sillon] ==
+                            var_dict[tache_collee][sillon])
+                ## Formation ##
+            elif tache == "FOR":
+                tache_collee = taches_df[taches_df["Lien machine"]
+                                         == "FOR="]["Type de tache humaine"].iloc[0]
+                # on colle la tache machine a la tache humaine en parallele
+                m.addConstr(var_dict[tache][sillon] ==
+                            var_dict[tache_collee][sillon])
+    '''
     p_bar.update(1)
     p_bar.refresh()
     #### Horaires respectés #### 
     compteur = 0
-    
+    max_horizon = m.addVar(vtype=GRB.INTEGER, lb=10100, ub=11000)
     for sillon in var_dict["essai de frein départ"].keys():
         ##### Heure de depart du train respectée #####
         LDEP = sillons_df[sillons_df["train_id"] == sillon]["LDEP"].iloc[0]
@@ -256,6 +258,9 @@ def generate_contraintes(m, dataframes, var_dict):
             # on respecte l'horaire de depart : la derniere tache doit se terminer avant que le train ne parte
             m.addConstr(var_dict["essai de frein départ"][sillon] +
                         taches_df[taches_df["Type de tache humaine"] == "essai de frein départ"]["Durée"].iloc[0] <= h_dep)
+            # horizon 1 semaine respecté !
+            m.addConstr(var_dict["essai de frein départ"][sillon] +
+                        taches_df[taches_df["Type de tache humaine"] == "essai de frein départ"]["Durée"].iloc[0] <= 10350)
 
     ###### Heure d'arrivée du train respectée  #####
     for sillon in var_dict["arrivée Reception"].keys():
@@ -390,7 +395,7 @@ def generate_contraintes(m, dataframes, var_dict):
             for sillon_dep in var_dict["arrivée Reception"].keys()    
         ])
         occupation = pos_sum - neg_sum
-        OCCUPATIONS["DEB"].append(occupation)
+        OCCUPATIONS["DEB"].append(("arrivée Reception", sillon_target, occupation))
         m.addConstr(occupation<=chantiers_df[chantiers_df["Chantier"]=="WPY_REC"]["Nombre de voies"].iloc[0])
         
     ### FOR ###
@@ -438,7 +443,7 @@ def generate_contraintes(m, dataframes, var_dict):
             for sillon_deg in var_dict["dégarage / bouger de rame"].keys()    
         ])
         occupation = pos_sum - neg_sum
-        OCCUPATIONS["FOR"].append(occupation)
+        OCCUPATIONS["FOR"].append(("débranchement", sillon_deb_target, occupation))
         m.addConstr(occupation<=chantiers_df[chantiers_df["Chantier"]=="WPY_FOR"]["Nombre de voies"].iloc[0])
     
     ### DEG ###
@@ -464,7 +469,7 @@ def generate_contraintes(m, dataframes, var_dict):
             for sillon_dep in var_dict["dégarage / bouger de rame"].keys()    
         ])
         occupation = pos_sum - neg_sum
-        OCCUPATIONS["DEG"].append(occupation)
+        OCCUPATIONS["DEG"].append(("dégarage / bouger de rame", sillon_target, occupation))
         m.addConstr(occupation<=chantiers_df[chantiers_df["Chantier"]=="WPY_DEP"]["Nombre de voies"].iloc[0])
     
     p_bar.update(1)
@@ -474,4 +479,4 @@ def generate_contraintes(m, dataframes, var_dict):
     #debug info
     # print("B= ",B)
     m.update()
-    return B,OCCUPATIONS
+    return B,OCCUPATIONS,max_horizon

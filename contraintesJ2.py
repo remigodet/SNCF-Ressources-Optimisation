@@ -14,16 +14,19 @@ def generate_contraintes(m, dataframes, var_dict, links_dict):
     roulements_df = dataframes["roulements_df"]
     # links_dict = tache_name,tache,roulement,a,jour,c
     
-    ##### c1: 1 JS par tache ####
+    # ##### c1: 1 JS par tache ####
     for tache_name in var_dict.keys():
         for target_tache in var_dict[tache_name].keys():
             temp = []
             for tache_name_key, tache_key, r,a,j,c in links_dict.keys():
                 if tache_name_key==tache_name and tache_key==target_tache:
+                    # somme des jds sur cette tache unique 
                     temp.append(links_dict[tache_name, target_tache, r,a,j,c])
-            nb_of_jds = quicksum(temp)
+            print("TEMP", end="")
+            print(temp)
+            print(len(temp))
+            nb_of_jds = gb.quicksum(temp)
             m.addConstr(nb_of_jds==1)    
-    
     
     p_bar.update(1)
     p_bar.refresh()
@@ -118,11 +121,19 @@ def generate_contraintes(m, dataframes, var_dict, links_dict):
     t = time.time()
     for tache_name,target_tache,roulement,a,jour,c in tqdm(sorted(links_dict.keys(), key=lambda x:(x[3],x[5],x[4]))): #with tqdm
     # for tache_name,target_tache,roulement,a,jour,c in links_dict.keys():
-        
-        chantier = taches_df[taches_df["Type de tache humaine"]==tache_name]["Chantier"].iloc[0]
-        # get all others tasks from that chantier in that JDS
+    
+        # Par chantier : 
+        # chantier = taches_df[taches_df["Type de tache humaine"]==tache_name]["Chantier"].iloc[0]
+        # # get all others tasks from that chantier in that JDS
+        # other_tache_list = []
+        # for chantier_tache in taches_df[taches_df["Chantier"]==chantier]["Type de tache humaine"]:
+        #     for tache in var_dict[chantier_tache].keys():
+        #         if  (chantier_tache,tache,roulement,a,jour,c) in links_dict.keys():
+        #             other_tache_list.append((tache, chantier_tache))
+        # V2 :
+        # get all others tasks in that JDS
         other_tache_list = []
-        for chantier_tache in taches_df[taches_df["Chantier"]==chantier]["Type de tache humaine"]:
+        for chantier_tache in var_dict.key():
             for tache in var_dict[chantier_tache].keys():
                 if  (chantier_tache,tache,roulement,a,jour,c) in links_dict.keys():
                     other_tache_list.append((tache, chantier_tache))
