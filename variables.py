@@ -65,27 +65,40 @@ def generate_variablesJ2(m: Model, var_dict, dataframes):
     variables = {}
     for roulement in tqdm(roulements_df["Roulement"], "Link variables"):
         for a in range(1, roulements_df[roulements_df["Roulement"]==roulement]["Nombre agents"].iloc[0]+1):
-            for jour in range(1,len(set(dataframes["sillons_df"]["JDEP"]))):
+            for jour in range(1,len(set(dataframes["sillons_df"]["JDEP"]))+1):
                 nb_cycles = len(roulements_df[roulements_df["Roulement"]==roulement]["Cycles horaires"].iloc[0].split(";"))
                 for c in range(1,nb_cycles+1):
                     if str(jour%7) in roulements_df[roulements_df["Roulement"]==roulement]["Jours de la semaine"].iloc[0].split(";"):
                         jds_start, jds_end = utils.get_min_from_rajc(roulement, jour, c, roulements_df)
-                        for chantier in roulements_df[roulements_df["Roulement"]==roulement]["Connaissances chantiers"]:
-                            for tache_name in taches_df[taches_df["Chantier"]==chantier]["Type de tache humaine"]:
-                                for tache in var_dict[tache_name].keys():
-                                    # peut mieux faire avec tache_name et order des tache !! 
-                                    ok = False
-                                    if chantier == "WPY_REC":
-                                        sillon_arrives = utils.get_min_from_sillonid("ARR",tache,sillons_df)
-                                        ok = sillon_arrives <= jds_start
-                                    elif chantier in ["WPY_FOR", "WPY_DEP"]:
-                                        sillon_departs= utils.get_min_from_sillonid("DEP",tache,sillons_df)
-                                        ok = jds_end <= sillon_departs
-                                    else:
-                                        raise Exception("Chantier not found:", chantier)
-                                    if ok:
-                                        variables[tache_name,tache,roulement,a,jour,c] = m.addVar(vtype=GRB.BINARY, 
-                                                                                name=f'Link of {tache_name} {tache} TO {roulement}-{a}-{jour}-{c}')
+                        for chantiers in roulements_df[roulements_df["Roulement"]==roulement]["Connaissances chantiers"]:
+                            for chantier in chantiers.split(";"):
+                                for tache_name in taches_df[taches_df["Chantier"]==chantier]["Type de tache humaine"]:
+                                    for tache in var_dict[tache_name].keys():
+                                        # debug
+                                        # debug = False
+                                        # if tache == "4424909/08/202203:0723:5909/08/2022" and tache_name=="appui voie + mise en place câle":
+                                        #     print(tache_name, tache)
+                                        #     print(roulement,a,jour,c)
+                                        #     print("start, end: ", jds_start, jds_end)
+                                        #     print(jds_end)
+                                        #     debug = True
+                                        # peut mieux faire avec tache_name et order des tache !! 
+                                        ok = False
+                                        if chantier == "WPY_REC":
+                                            sillon_arrives = utils.get_min_from_sillonid("ARR",tache,sillons_df)
+                                            ok = sillon_arrives <= jds_start
+                                        elif chantier in ["WPY_FOR", "WPY_DEP"]:
+                                            sillon_departs= utils.get_min_from_sillonid("DEP",tache,sillons_df)
+                                            # if debug: print("DEPQRTS: ",sillon_departs)
+                                            ok = jds_end <= sillon_departs
+                                        else:
+                                            raise Exception("Chantier not found:", chantier)
+                                        # if debug: print(ok)
+                                        if ok:
+                                            # if debug:
+                                                # print("Created tache_name,tache,roulement,a,jour,c",tache_name,tache,roulement,a,jour,c)
+                                            variables[tache_name,tache,roulement,a,jour,c] = m.addVar(vtype=GRB.BINARY, 
+                                                                                    name=f'Link of {tache_name} {tache} TO {roulement}-{a}-{jour}-{c}')
     m.update()
     return variables
 
