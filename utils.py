@@ -42,8 +42,11 @@ def get_min_from_rajc(r,j,c, roulements_df):
         cycle = cycle.split("-")
         cycle_start = int(cycle[0][:2])
         cycle_end = int(cycle[1][:2])
-        minute_start = j*24*60 + cycle_start*60
-        minute_end = j*24*60 + cycle_end*60
+        minute_start = (j-1)*24*60 + cycle_start*60
+        if cycle_end<cycle_start:
+            minute_end = (j-1)*24*60 + (cycle_end+cycle_start)*60
+        else :
+            minute_end = (j-1)*24*60 + (cycle_end-cycle_start)*60
     except:
         raise Exception("error", r,j,c)
     return minute_start, minute_end
