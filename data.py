@@ -2,7 +2,8 @@ import pandas as pd
 from pandas import read_excel
 from tqdm import tqdm
 # NAME = "mini_instance.xls"
-NAME = "instance_WPY_realiste_jalon2.xls"
+# NAME = "mini_instance_J2.xlsx"
+NAME = "instance_WPY_realiste_jalon2.xlsx"
 data = {}
 p_bar = tqdm(range(7), desc="LOADING DATA")
 data["taches_df"] = pd.read_excel(f"./Data SNCF/{NAME}", sheet_name="Taches humaines")
@@ -45,7 +46,6 @@ def get_id(row):
                 except:
                     print(row["n°TRAIN"])
                     print(row.JDEP)
-
         return a
 
 p_bar.update(1)
@@ -53,7 +53,7 @@ p_bar.refresh()
 data["sillons_df"]["HARR"] = data["sillons_df"].apply(lambda row: str(row["HARR"])[:5], axis=1)
 data["sillons_df"]["HDEP"] = data["sillons_df"].apply(lambda row: str(row["HDEP"])[:5], axis=1)
 data["sillons_df"]["train_id"] = data["sillons_df"].apply(lambda row: str(row["n°TRAIN"])+str(row.JDEP)+str(row.HDEP)+str(row.HARR)+str(row.JARR), axis=1)
-data["correspondances_df"]["train_id"] = data["correspondances_df"].apply( lambda row: get_id(row) , axis=1)
+data["correspondances_df"]["train_id"] = data["correspondances_df"].apply(lambda row: get_id(row) , axis=1)
 p_bar.update(1)
 p_bar.refresh()
 def get_all_pandas():
