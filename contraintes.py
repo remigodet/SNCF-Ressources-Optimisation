@@ -7,8 +7,9 @@ def generate_contraintes(m, dataframes, var_dict):
 
     #tqdm 
     NB_CONTRAINTES = 8
-    p_bar = tqdm(range(NB_CONTRAINTES), desc="BUILDING CONSTRAINTS")
-
+    p_bar = tqdm(range(NB_CONTRAINTES), desc="BUILDING CONSTRAINTS FOR J1")
+    # Horizon
+    HORIZON = 25000
 
     taches_df = dataframes["taches_df"]
     machines_df = dataframes["machines_df"]
@@ -34,9 +35,10 @@ def generate_contraintes(m, dataframes, var_dict):
         for sillon_i in var_dict[machine].keys():
             for sillon_j in var_dict[machine].keys():
                 if sillon_i != sillon_j:
-                    add_constr_abs_sup(m, var_dict[machine][sillon_i], var_dict[machine][sillon_j],
-
-           machines_df[machines_df["Machine"] == machine]["Duree "].iloc[0])
+                    add_constr_abs_sup(m,
+                                       var_dict[machine][sillon_i], 
+                                       var_dict[machine][sillon_j],
+                                       machines_df[machines_df["Machine"] == machine]["Duree "].iloc[0])
                     # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] <= dico[machine][sillon_j]) >>((dico[machine][sillon_j] - dico[machine][sillon_i]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
                     # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] >= dico[machine][sillon_j]) >>((dico[machine][sillon_i] - dico[machine][sillon_j]) >= machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
                     # anti_parallel_constrs.append(m.addConstr((dico[machine][sillon_i] - dico[machine][sillon_j] <= -machines_df[machines_df["Machine"]==machine]["Duree "].iloc[0])))
@@ -212,7 +214,7 @@ def generate_contraintes(m, dataframes, var_dict):
     p_bar.refresh()
     ##### Taches humaines (chaines et debut synchro avec les taches machines) #####
     # uncomment for J1
-    '''
+    
     for tache in var_dict.keys():
         for sillon in var_dict[tache].keys():
             ## Débranchement ##
@@ -236,7 +238,7 @@ def generate_contraintes(m, dataframes, var_dict):
                 # on colle la tache machine a la tache humaine en parallele
                 m.addConstr(var_dict[tache][sillon] ==
                             var_dict[tache_collee][sillon])
-    '''
+    
     p_bar.update(1)
     p_bar.refresh()
     #### Horaires respectés #### 
@@ -260,7 +262,7 @@ def generate_contraintes(m, dataframes, var_dict):
                         taches_df[taches_df["Type de tache humaine"] == "essai de frein départ"]["Durée"].iloc[0] <= h_dep)
             # horizon 1 semaine respecté !
             m.addConstr(var_dict["essai de frein départ"][sillon] +
-                        taches_df[taches_df["Type de tache humaine"] == "essai de frein départ"]["Durée"].iloc[0] <= 10350)
+                        taches_df[taches_df["Type de tache humaine"] == "essai de frein départ"]["Durée"].iloc[0] <= HORIZON)
 
     ###### Heure d'arrivée du train respectée  #####
     for sillon in var_dict["arrivée Reception"].keys():
@@ -282,53 +284,6 @@ def generate_contraintes(m, dataframes, var_dict):
     p_bar.update(1)
     p_bar.refresh()
     ##### Respect du nombre de voies de chantier #####
-    # chantier_cycles = {}
-    # for chantier in set(taches_df["Chantier"].values):
-    #     chantier_cycles[chantier, "end"] = taches_df[taches_df["Chantier"] == chantier][taches_df.Ordre ==
-    #                                                                                       taches_df[taches_df["Chantier"] == chantier].Ordre.max()]["Type de tache humaine"].iloc[0]
-    #     chantier_cycles[chantier, "start"] = taches_df[taches_df["Chantier"] == chantier][taches_df.Ordre ==
-    #                                                                                     taches_df[taches_df["Chantier"] == chantier].Ordre.min()]["Type de tache humaine"].iloc[0]
-
-    # def get_all_tasks_by_name(name):
-    #     return var_dict[name].keys()
-    # B = {}
-    # def b(tache_i, tache_j, tache_i_name, duree=0):
-    #             if (tache_i_name,tache_i,tache_j) in B.keys():
-    #                 bb = B[tache_i_name,tache_i,tache_j]
-    #                 return 1-bb
-    #             else:
-    #                 bb = m.addVar(vtype=GRB.BINARY, name=f"HELPER {tache_i_name},{tache_i},{tache_j}")
-    #                 B[tache_i_name,tache_j,tache_i]= bb
-                
-    #                 m.addConstr((bb == 1) >> (var_dict[tache_i_name][tache_i]+duree <= var_dict[chantier_cycles[chantier, "start"]][tache_j]),
-    #                             name="indicator_constr1")
-    #                 m.addConstr((bb == 0) >> (var_dict[tache_i_name][tache_i]+duree >= var_dict[chantier_cycles[chantier, "start"]][tache_j] + 0.5),
-    #                             name="indicator_constr2")
-    #                 return bb
-    
-    # OCCUPATIONS = []
-    # def add_occupation_constr(chantier, tache_debut):
-        
-
-    #     occupation = quicksum([b(tache_chantier,
-    #                              tache_debut,
-    #                              chantier_cycles[chantier, "start"])
-    #                            for tache_chantier in get_all_tasks_by_name(chantier_cycles[chantier, "start"])])
-    #     duree = taches_df[taches_df["Type de tache humaine"]
-    #                       == chantier_cycles[chantier, "end"]]["Durée"].iloc[0]
-    #     occupation = occupation - quicksum([b(tache_chantier,
-    #                                           tache_debut,
-    #                                           chantier_cycles[chantier, "end"],
-    #                                           duree= duree)
-    #                                         for tache_chantier in get_all_tasks_by_name(chantier_cycles[chantier, "end"])])
-    #     OCCUPATIONS.append(occupation)
-    #     m.addConstr(occupation<=chantiers_df[chantiers_df["Chantier"]==chantier]["Nombre de voies"].iloc[0])
-    #     m.addConstr(occupation>=1)
-    # for chantier in set(chantiers_df["Chantier"].values):
-    #     print(f"Adding occupation constrainst for: {chantier}...")
-    #     for tache_debut in get_all_tasks_by_name(chantier_cycles[chantier, "start"]):
-    #         add_occupation_constr(chantier, tache_debut)
-    
     
     # OCCUPATIONS V 2.0 
     
@@ -385,6 +340,7 @@ def generate_contraintes(m, dataframes, var_dict):
             ])
         duree = taches_df[taches_df["Type de tache humaine"]
                           == "débranchement"]["Durée"].iloc[0]
+        # neg sum on leaving chantier
         neg_sum = quicksum([
             b(sillon_dep,
               utils.get_min_from_sillonid("ARR", sillon_target, sillons_df),
@@ -400,12 +356,10 @@ def generate_contraintes(m, dataframes, var_dict):
         
     ### FOR ###
     # as we have to find the wagons the positive sum has +1 depth, so we defien the following fucntion : 
-    def has_some_wagon_arrived_yet(sillon_deb_target, sillon_for):
+    def has_some_wagon_arrived_yet(sillon_deb_target, sillon_deg):
         # compute antecedants 
-        antecedents_sillon_for = [correspondances_df[correspondances_df["id_wagon"] == wagon]["train_id"].iloc[0] 
-                                  for wagon in list(correspondances_df[correspondances_df["train_id"] == sillon_for]["id_wagon"])]
-        duree = taches_df[taches_df["Type de tache humaine"]
-                          == "débranchement"]["Durée"].iloc[0]
+        antecedents_sillon_for = [correspondances_df[correspondances_df["id_wagon"] == wagon][correspondances_df["LDEP"] == "NC"]["train_id"].iloc[0] 
+                                  for wagon in set(correspondances_df[correspondances_df["train_id"] == sillon_deg]["id_wagon"])]
         # sum of all antecedants that managed to arrive before this one train
         n = quicksum([
             b(sillon_deb,
@@ -422,29 +376,22 @@ def generate_contraintes(m, dataframes, var_dict):
         m.addConstr((bb == 0) >> (n <= 0),
                     name="indicator_constr2")
         return bb
-    
+    duree = taches_df[taches_df["Type de tache humaine"]== "dégarage / bouger de rame"]["Durée"].iloc[0] -taches_df[taches_df["Type de tache humaine"]=="débranchement"]["Durée"].iloc[0]
     for sillon_deb_target in var_dict["débranchement"].keys():
         # postive sum on HARR : 
-        pos_sum = quicksum([
-            has_some_wagon_arrived_yet(sillon_deb_target, sillon_for)
-            for sillon_for in var_dict["appui voie + mise en place câle"].keys()    
-            ])
-        duree = taches_df[taches_df["Type de tache humaine"]
-                          == "débranchement"]["Durée"].iloc[0]
-        duree -= taches_df[taches_df["Type de tache humaine"]
-                          == "dégarage / bouger de rame"]["Durée"].iloc[0]
-        neg_sum = quicksum([
+        occupation = quicksum([
+            has_some_wagon_arrived_yet(sillon_deb_target, sillon_deg)
+            -
             b(sillon_deg,
               sillon_deb_target,
               "dégarage / bouger de rame",
               "débranchement", 
-              duree=duree
-              ) 
+              duree=duree) 
             for sillon_deg in var_dict["dégarage / bouger de rame"].keys()    
         ])
-        occupation = pos_sum - neg_sum
         OCCUPATIONS["FOR"].append(("débranchement", sillon_deb_target, occupation))
         m.addConstr(occupation<=chantiers_df[chantiers_df["Chantier"]=="WPY_FOR"]["Nombre de voies"].iloc[0])
+        # m.addConstr(occupation>=0)
     
     ### DEG ###
     for sillon_target in var_dict["dégarage / bouger de rame"].keys():
