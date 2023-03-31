@@ -358,7 +358,7 @@ def generate_contraintes(m, dataframes, var_dict):
     # as we have to find the wagons the positive sum has +1 depth, so we defien the following fucntion : 
     def has_some_wagon_arrived_yet(sillon_deb_target, sillon_deg):
         # compute antecedants 
-        antecedents_sillon_for = [correspondances_df[correspondances_df["id_wagon"] == wagon][correspondances_df["LDEP"] == "NC"]["train_id"].iloc[0] 
+        antecedents_sillon_for = [correspondances_df[correspondances_df["id_wagon"] == wagon][correspondances_df["LDEP"] != "WPY"]["train_id"].iloc[0] 
                                   for wagon in set(correspondances_df[correspondances_df["train_id"] == sillon_deg]["id_wagon"])]
         # sum of all antecedants that managed to arrive before this one train
         n = quicksum([

@@ -3,7 +3,8 @@ from pandas import read_excel
 from tqdm import tqdm
 # NAME = "mini_instance.xls"
 # NAME = "mini_instance_J2.xlsx"
-NAME = "instance_WPY_realiste_jalon2.xlsx"
+# NAME = "instance_WPY_realiste_jalon2.xlsx"
+NAME = "instance_WPY_soutenance.xlsx"
 data = {}
 p_bar = tqdm(range(7), desc="LOADING DATA")
 data["taches_df"] = pd.read_excel(f"./Data SNCF/{NAME}", sheet_name="Taches humaines")
@@ -27,7 +28,7 @@ p_bar.refresh()
 # update sillon to unique names :
 # print(data["sillons_df"])
 def get_id(row):
-    if row.LDEP != "NC":
+    if row.LDEP == "WPY":
         # print(data["sillons_df"][(data["sillons_df"]["n°TRAIN"] == row["n°TRAIN"]) &
         #                                               (data["sillons_df"]["JDEP"] == row["JDEP"])]["train_id"].iloc[0])
         return data["sillons_df"][(data["sillons_df"]["n°TRAIN"] == row["n°TRAIN"]) &

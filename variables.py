@@ -48,7 +48,7 @@ def generate_variablesJ1(m: Model, dataframes):
     for idx in tqdm(range(len(sillons_df)), desc = "Initialising variables"):
         sillon = sillons_df.iloc[idx]
         # print(sillon["n°TRAIN"])
-        if sillon["LDEP"] == "NC":
+        if sillon["LDEP"] not in ["WPY_DEP", "WPY"]:
             # add all taches arrival
             add_arrival_tasks(sillon)
         elif sillon["LDEP"] in ["WPY_DEP", "WPY"]:
@@ -57,9 +57,10 @@ def generate_variablesJ1(m: Model, dataframes):
         else:
             raise Exception(f"LDEP: '{sillon['LDEP']}' of sillon not recognized ! ")
     print()
+    
     return variables
 def generate_variablesJ2(m: Model, var_dict, dataframes):
-    REDUCTION_PARAM = 2*24*60
+    REDUCTION_PARAM = 10*24*60
     roulements_df = dataframes["roulements_df"]
     taches_df = dataframes["taches_df"]
     sillons_df = dataframes["sillons_df"]

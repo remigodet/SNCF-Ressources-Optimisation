@@ -121,6 +121,7 @@ def generate_contraintes(m, dataframes, var_dict, links_dict):
         With a potential duree after tache_i
         None name is for constants
         '''
+        # print(duree)
         # tt = time.time_ns()
         # print(tache_j, tache_i, tache_j_name, tache_i_name)
         if (tache_j, tache_i, tache_j_name, tache_i_name, duree) in B.keys():
@@ -132,17 +133,6 @@ def generate_contraintes(m, dataframes, var_dict, links_dict):
         B[tache_i, tache_j, tache_i_name, tache_j_name, duree]= bb
         #  some have to be derived from the gurobi variables, others are directly constants
         try: 
-            # if tache_i_name != None:
-            #     
-            # else:
-            #     tache_i_var = m.addVar(vtype=GRB.INTEGER, name=f"HELPER2 {tache_i},{tache_j}")
-            #     m.addConstr(tache_i_var==tache_i, name="var_const")
-            # if tache_j_name != None:
-            #     
-            # else:
-            #     tache_j_var = m.addVar(vtype=GRB.INTEGER, name=f"HELPER2 {tache_i},{tache_j}")
-            #     m.addConstr(tache_j_var==tache_j, name="var_const")
-            # only from dict in J2.C4 
             tache_i_var = var_dict[tache_i_name][tache_i]
             tache_j_var = var_dict[tache_j_name][tache_j]
             m.addConstr((bb == 1) >> (tache_i_var+duree <= tache_j_var),
@@ -166,12 +156,13 @@ def generate_contraintes(m, dataframes, var_dict, links_dict):
     DONE ={}
     i=0
     for tache_name,target_tache,roulement,a,jour,c in tqdm(sorted(links_dict.keys(), key=lambda x:(x[2],x[4],x[5],x[3]))): #with tqdm x[3],x[5],x[4],x[2]
-        if (roulement,a,jour,c) not in DONE.keys(): DONE[roulement,a,jour,c]=[] 
-        if (roulement) == ("roulement_formation_depart"): #debug
+        # if (roulement,a,jour,c) not in DONE.keys(): DONE[roulement,a,jour,c]=[] 
+        # if (roulement) == ("roulement_formation_depart"): #debug
+        if True:
             # Par chantier : 
             # chantier = taches_df[taches_df["Type de tache humaine"]==tache_name]["Chantier"].iloc[0]
             # # get all others tasks from that chantier in that JDS
-            # other_tache_list = []
+            # other_tac7he_list = []
             # for chantier_tache in taches_df[taches_df["Chantier"]==chantier]["Type de tache humaine"]:
             #     for tache in var_dict[chantier_tache].keys():
             #         if  (chantier_tache,tache,roulement,a,jour,c) in links_dict.keys():
@@ -182,9 +173,10 @@ def generate_contraintes(m, dataframes, var_dict, links_dict):
             other_tache_list = []
             for chantier_tache in taches_humaines:
                 for tache in var_dict[chantier_tache].keys():
-                    if (chantier_tache,tache) not in DONE[roulement,a,jour,c]:
+                    #remove checked:
+                    # if (chantier_tache,tache) not in DONE[roulement,a,jour,c]:
                         if  (chantier_tache,tache,roulement,a,jour,c) in links_dict.keys():
-                        #remove checked:
+                        
                             other_tache_list.append((tache, chantier_tache))
             # print("KEY", tache_name,target_tache,roulement,a,jour,c)
             # print(len(other_tache_list))
@@ -198,7 +190,7 @@ def generate_contraintes(m, dataframes, var_dict, links_dict):
                     target_tache,
                     other_tache_name,
                     tache_name,
-                    int(taches_df[taches_df["Type de tache humaine"]==other_tache_name]["Durée"].iloc[0])
+                    duree= int(taches_df[taches_df["Type de tache humaine"]==other_tache_name]["Durée"].iloc[0])
                     ))
                 *
                 links_dict[other_tache_name,
@@ -209,7 +201,9 @@ def generate_contraintes(m, dataframes, var_dict, links_dict):
             # t2 = time.time()
             # print(t2 - t)
             # print("end_sum")
-            m.addConstr(pos_neg_sum<=1)
+            m.addConstr(pos_neg_sum<= links_dict[tache_name,
+                            target_tache, 
+                            roulement,a,jour,c])
             
             
             # print("---")
@@ -221,12 +215,32 @@ def generate_contraintes(m, dataframes, var_dict, links_dict):
             # keep checked tasks TO OPTIMIZE
             # print(roulement,a,jour,c,tache_name,target_tache,)
             
-            DONE[roulement,a,jour,c].append((tache_name,target_tache))
+            # DONE[roulement,a,jour,c].append((tache_name,target_tache))
             # if i==10:
             #     break # !! debug only one rajc
             # i +=1
     p_bar.update(1)
-    p_bar.refresh()    
-        # get all other chantier task + links to check
-        # add sums
+    p_bar.refresh()   
+    
+    
+    #####C5##### replace C4
+    # all_active_jds = {}
+    
+    # temp = []
+    # jour_to_dispo = lambda j: "7" if j%7==0 else str(j%7)
+    # for roulement in tqdm(roulements_df["Roulement"], "Create JdS objective"):
+    #     for a in range(1, roulements_df[roulements_df["Roulement"]==roulement]["Nombre agents"].iloc[0]+1):
+    #         for jour in range(1,len(set(dataframes["sillons_df"]["JDEP"]))+1):
+    #             nb_cycles = len(roulements_df[roulements_df["Roulement"]==roulement]["Cycles horaires"].iloc[0].split(";"))
+    #             for c in range(1,nb_cycles+1):
+    #                 if jour_to_dispo(jour) in roulements_df[roulements_df["Roulement"]==roulement]["Jours de la semaine"].iloc[0].split(";"):
+    #                     # rajc -> sum on tasks 
+    #                     taches_of_jds = []
+    #                     for chantier_tache in taches_humaines:
+    #                         for tache in var_dict[chantier_tache].keys():
+    #                             if (chantier_tache,tache,roulement,a,jour,c) in links_dict.keys():
+    #                                 taches_of_jds.append(links_dict[chantier_tache,tache,roulement,a,jour,c]) 
+    #                     if len(taches_of_jds)>0:
+    #                         m.addConstr(quicksum(taches_of_jds)<=10)
+
     m.update()
